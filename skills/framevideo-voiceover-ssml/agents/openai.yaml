@@ -1,0 +1,4 @@
+interface:
+  display_name: "Voiceover SSML"
+  short_description: "Generate voice scripts from subtitles"
+  default_prompt: "Use $framevideo-voiceover-ssml to turn project subtitles into a narrated script with phoneme, break, and ttnumber markup."

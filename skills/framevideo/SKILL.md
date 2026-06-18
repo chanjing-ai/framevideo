@@ -375,6 +375,20 @@ If no `frame.md` or `design.md` exists, follow [house-style.md](./house-style.md
 
 ## Output Checklist
 
+## API Credentials During Authoring
+
+When a requested video needs a Chanjing-backed feature (for example public voices, OpenAPI music/voice assets, digital humans, or any Studio panel that reports missing Chanjing credentials), prefer the Studio/preview credential flow over stopping at the terminal.
+
+1. Check the existing auth status through the relevant project route or CLI helper.
+2. If credentials are missing and the Codex in-app browser is available, start `npx framevideo preview` for the project and open the Studio project URL.
+3. Navigate to the feature panel that needs credentials and open the login/configuration dialog so the user can enter `app_id` and `secret_key` in the preview UI.
+4. After the user confirms login, re-check auth status and continue the asset generation workflow.
+5. If preview cannot be opened or the user asked for a command-line-only workflow, then explain the missing credential fields and the fallback CLI/env options.
+
+Never print, echo, or commit secrets. Do not fake generated assets when credentials are missing; continue with placeholders only if the user accepts that as an interim state.
+
+## Output Checklist
+
 **Fast (run immediately, block on results):**
 
 - [ ] `npx framevideo lint` and `npx framevideo validate` both pass

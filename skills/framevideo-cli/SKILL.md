@@ -76,6 +76,16 @@ npx framevideo preview --port 4567       # custom port (default 3002)
 
 Hot-reloads on file changes. Opens the studio in your browser automatically.
 
+If a video workflow needs Chanjing/OpenAPI credentials and auth is missing, use preview as the preferred setup surface:
+
+1. Run `npx framevideo preview` in the project.
+2. Open the Studio project URL in the Codex in-app browser.
+3. Navigate to the voice, digital-human, or account area that requires credentials.
+4. Click the login/configuration control so the credential modal is visible for the user.
+5. After the user enters credentials, re-run the auth/status check before continuing.
+
+Only fall back to CLI/env instructions when preview is unavailable or the user explicitly asks not to use the browser UI. Never log credential values.
+
 When handing a project back to the user, use the Studio project URL, not the
 source `index.html` path:
 

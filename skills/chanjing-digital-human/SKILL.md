@@ -35,6 +35,19 @@ DELETE /api/projects/:id/chanjing/auth
 
 `POST /chanjing/auth/login` accepts `app_id` and `secret_key`; the server exchanges them for an access token and persists the result in the shared store.
 
+## Missing Credentials UX
+
+When Chanjing credentials are missing during a Codex-authored video workflow, do not stop at "please configure env vars" if the preview UI can be used. Prefer this sequence:
+
+1. Start or reuse `npx framevideo preview` for the current project.
+2. Open the Studio project URL in the Codex in-app browser.
+3. Navigate to the Digital Human panel, Voice panel, or account/login area that needs Chanjing access.
+4. Click the login/configuration button so the app shows the credential modal.
+5. Let the user enter `app_id` and `secret_key` in that modal.
+6. Re-check `/api/projects/:id/chanjing/auth/status` after the user confirms login, then continue listing people/voices or generating the asset.
+
+Use command-line/env guidance only when the browser UI cannot be opened or the user explicitly requests a non-interactive setup. Never print, echo, or save secret values outside the shared credential store.
+
 ## API Surface
 
 Prefer `ChanjingOpenApiClient` over hand-written fetch calls:
@@ -121,7 +134,7 @@ Parameter guidance:
 ## Standard Workflow
 
 1. Confirm the digital-human source: `common` for public people, `custom` for user-trained people. If unclear, start with `common`.
-2. Check auth with `getChanjingOpenApiAuthStatus()` or the Studio auth status route. If missing, ask for `app_id` and `secret_key` or point the user to the Studio login UI.
+2. Check auth with `getChanjingOpenApiAuthStatus()` or the Studio auth status route. If missing, open the preview/Studio login UI and surface the credential modal for the user whenever possible; ask for `app_id` and `secret_key` directly only when the UI route is unavailable.
 3. List candidates before choosing. For common people, include tag filters if the user described style, age, role, or gender. Compare `name`, `cover`, `previewVideoUrl`, `audioManId`, `audioName`, `figureType`, `width`, and `height`; do not blindly pick the first candidate.
 4. Select `audioManId`. Public people often include a matching voice; custom people may require the returned or user-selected voice.
 5. Ask for subtitle preference before creating the task unless the current workflow already supplied it. Use `hideSubtitle: true` when the user wants no subtitles; use `false` only when they explicitly want platform subtitles.

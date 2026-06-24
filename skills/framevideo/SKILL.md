@@ -1,6 +1,6 @@
 ---
 name: framevideo
-description: Create video compositions, animations, title cards, overlays, captions, voiceovers, audio-reactive visuals, and scene transitions in FrameVideo HTML. Use when asked to build any HTML-based video content, add captions or subtitles synced to audio, generate text-to-speech narration, create audio-reactive animation (beat sync, glow, pulse driven by music), add animated text highlighting (marker sweeps, hand-drawn circles, burst lines, scribble, sketchout), or add transitions between scenes (crossfades, wipes, reveals, shader transitions). Covers composition authoring, timing, media, and the full video production workflow. For dev-loop CLI commands (init, lint, inspect, preview, render) see the framevideo-cli skill; for asset preprocessing commands (tts, transcribe, remove-background) see the framevideo-media skill.
+description: Create video compositions, animations, title cards, overlays, captions, voiceovers, audio-reactive visuals, and scene transitions in FrameVideo HTML. Use when asked to build any HTML-based video content, add captions or subtitles synced to audio, generate text-to-speech narration, create audio-reactive animation (beat sync, glow, pulse driven by music), add animated text highlighting (marker sweeps, hand-drawn circles, burst lines, scribble, sketchout), or add transitions between scenes (crossfades, wipes, reveals, shader transitions). Covers composition authoring, timing, media, and the full video production workflow. For dev-loop CLI commands (init, lint, inspect, preview, render) see the framevideo-cli skill; for asset preprocessing commands (tts, transcribe, remove-background) see the framevideo-media skill; for Chanjing digital humans, OAuth, and website-project synthesis see the chanjing-digital-human skill.
 ---
 
 # FrameVideo
@@ -375,17 +375,11 @@ If no `frame.md` or `design.md` exists, follow [house-style.md](./house-style.md
 
 ## Output Checklist
 
-## API Credentials During Authoring
+## Chanjing OAuth During Authoring
 
-When a requested video needs a Chanjing-backed feature (for example public voices, OpenAPI music/voice assets, digital humans, or any Studio panel that reports missing Chanjing credentials), prefer the Studio/preview credential flow over stopping at the terminal.
+When a requested video needs Chanjing-backed features (public voices, platform speech, digital humans, or any Studio panel reporting missing Chanjing auth), invoke the `chanjing-digital-human` skill — especially **Auth Contract** and **Missing Credentials UX**. Do not stop at terminal env-var guidance when preview/Studio login is available.
 
-1. Check the existing auth status through the relevant project route or CLI helper.
-2. If credentials are missing and the Codex in-app browser is available, start `npx framevideo preview` for the project and open the Studio project URL.
-3. Navigate to the feature panel that needs credentials and open the login/configuration dialog so the user can enter `app_id` and `secret_key` in the preview UI.
-4. After the user confirms login, re-check auth status and continue the asset generation workflow.
-5. If preview cannot be opened or the user asked for a command-line-only workflow, then explain the missing credential fields and the fallback CLI/env options.
-
-Never print, echo, or commit secrets. Do not fake generated assets when credentials are missing; continue with placeholders only if the user accepts that as an interim state.
+Never print, echo, or commit tokens or credential-store contents. Do not fake generated assets when auth is missing; continue with placeholders only if the user accepts that as an interim state.
 
 ## Output Checklist
 

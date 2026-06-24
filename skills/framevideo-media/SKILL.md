@@ -13,7 +13,7 @@ Generate speech audio locally with Kokoro-82M. No API key.
 
 ### Chanjing-Backed Voice Requests
 
-If the user or customer asks for Chanjing voice generation, platform voices, digital-human narration, or any OpenAPI-backed speech asset, use the Chanjing/FrameVideo auth and generation flow first instead of defaulting to local Kokoro TTS. Check the shared Chanjing auth status through the existing CLI/client or Studio route. If credentials are missing, pause the asset-generation flow and open the project in `npx framevideo preview`; navigate to the Voice, Digital Human, or account/login area and open the login/configuration modal so the user can enter `app_id` and `secret_key`. Re-check auth after the user logs in, then continue generating the voice or digital-human asset. Only use local `npx framevideo tts` as a fallback when the user explicitly wants local/offline speech or accepts a placeholder while Chanjing auth is unavailable.
+If the user asks for Chanjing voice generation, platform voices, digital-human narration, or any Chanjing-backed speech asset, invoke the `chanjing-digital-human` skill instead of defaulting to local Kokoro TTS. Only use local `npx framevideo tts` when the user explicitly wants offline speech or accepts a placeholder while Chanjing auth is unavailable.
 
 ```bash
 npx framevideo tts "Text here" --voice af_nova --output narration.wav

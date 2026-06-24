@@ -76,15 +76,15 @@ npx framevideo preview --port 4567       # custom port (default 3002)
 
 Hot-reloads on file changes. Opens the studio in your browser automatically.
 
-If a video workflow needs Chanjing/OpenAPI credentials and auth is missing, use preview as the preferred setup surface:
+If a video workflow needs Chanjing OAuth login and auth is missing, use preview as the preferred setup surface:
 
 1. Run `npx framevideo preview` in the project.
 2. Open the Studio project URL in the Codex in-app browser.
-3. Navigate to the voice, digital-human, or account area that requires credentials.
-4. Click the login/configuration control so the credential modal is visible for the user.
-5. After the user enters credentials, re-run the auth/status check before continuing.
+3. Navigate to the Voice, Digital Human, or account area that requires Chanjing access.
+4. Click the login control so the OAuth login dialog is visible and the browser authorization flow starts.
+5. Let the user complete the authorization page, then re-run the auth/status check before continuing.
 
-Only fall back to CLI/env instructions when preview is unavailable or the user explicitly asks not to use the browser UI. Never log credential values.
+Only fall back to command-line OAuth login guidance when preview is unavailable or the user explicitly asks not to use the browser UI. Never log tokens or credential-store contents.
 
 When handing a project back to the user, use the Studio project URL, not the
 source `index.html` path:
@@ -140,10 +140,22 @@ npx framevideo render --docker                       # byte-identical
 npx framevideo doctor       # check environment (Chrome, FFmpeg, Node, memory)
 npx framevideo browser      # manage bundled Chrome
 npx framevideo info         # version and environment details
-npx framevideo upgrade      # check for updates
+npx framevideo upgrade      # upgrade CLI and refresh FrameVideo skills
 ```
 
 Run `doctor` first if rendering fails. Common issues: missing FFmpeg, missing Chrome, low memory.
+
+## Upgrade Workflow
+
+When the user asks to upgrade FrameVideo from Codex, Claude Code, Cursor, or another agent tool, handle it as an implementation task, not just advice:
+
+1. Check the available version with `npx framevideo upgrade --check` or `framevideo upgrade --json`.
+2. Briefly tell the user the upgrade plan: update the CLI package, refresh FrameVideo skills, then verify the installed command.
+3. Run `framevideo upgrade --yes`.
+4. If the command did not refresh skills automatically, run `npx skills add chanjing-ai/framevideo --all`.
+5. Verify with `framevideo --version` and `framevideo --help`.
+
+If any step fails, stop and report the failed step plus the manual command to retry. Do not claim the upgrade completed until the CLI version and skills refresh have both succeeded or the user explicitly accepts a partial upgrade.
 
 ## Other
 

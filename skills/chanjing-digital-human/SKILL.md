@@ -1,248 +1,188 @@
 ---
 name: chanjing-digital-human
-description: Generate Chanjing digital-human videos for FrameVideo projects. Use when creating, listing, polling, or wiring Chanjing public/custom digital humans into a composition; adapts Chanjing OpenAPI auth to FrameVideo's shared credential store, Studio proxy routes, and assets/digital-humans output convention.
+description: Generate Chanjing digital-human videos via website-project synthesis and wire them into FrameVideo compositions. Use when listing public/custom digital humans or voices, checking Chanjing OAuth login, submitting/polling synthesis tasks, or wiring assets into compositions. For local Kokoro TTS fallback see framevideo-media; for composition HTML conventions see framevideo.
 ---
 
 # Chanjing Digital Human
 
-Create Chanjing digital-human MP4/WebM assets and wire them into FrameVideo compositions. This is the FrameVideo-adapted form of `chanjing-video-compose`: reuse this repo's OpenAPI client and auth store instead of copying standalone Python credential scripts.
+Access Chanjing website-side digital humans, voices, and synthesis tasks from FrameVideo. Reuse the OAuth plugin API client in `packages/cli/src/tts/chanjingOpenapi.ts` and the shared auth store in `packages/cli/src/auth/store.ts` — do not copy standalone credential scripts.
 
 ## Auth Contract
 
-Use the existing implementation in `packages/cli/src/tts/chanjingOpenapi.ts`.
-
-Credential priority:
-
-1. `CHANJING_OPENAPI_ACCESS_TOKEN`
-2. `CHANJING_OPENAPI_APP_ID` plus `CHANJING_OPENAPI_SECRET_KEY`
-3. stored `chanjing_openapi` credentials in the shared Chanjing credential store
-
-The store is read through `packages/cli/src/auth/store.ts`, so it honors `CHANJING_CONFIG_DIR` and shares the same `~/.chanjing` credential location used by `framevideo auth` and Studio. Do not create a separate credentials file for this skill.
-
-Useful commands and routes:
+1. `framevideo auth login` or Studio login starts OAuth CLI Web Login.
+2. Tokens live in the shared `oauth` block in `~/.chanjing/credentials` (honors `CHANJING_CONFIG_DIR`).
+3. Plugin requests use `Authorization: Bearer <access_token>`.
+4. Do not use `app_id`, `secret_key`, `CHANJING_OPENAPI_ACCESS_TOKEN`, or `dp_open_app` data.
 
 ```bash
 framevideo auth status
 ```
 
-Studio auth routes, when the Studio server is running:
-
-```text
-GET    /api/projects/:id/chanjing/auth/status
-POST   /api/projects/:id/chanjing/auth/login
-DELETE /api/projects/:id/chanjing/auth
-```
-
-`POST /chanjing/auth/login` accepts `app_id` and `secret_key`; the server exchanges them for an access token and persists the result in the shared store.
+Studio auth routes: see [studio-routes.md](./references/studio-routes.md).
 
 ## Missing Credentials UX
 
-When Chanjing credentials are missing during a Codex-authored video workflow, do not stop at "please configure env vars" if the preview UI can be used. Prefer this sequence:
+When OAuth is missing during an agent-authored workflow, do not stop at env-var guidance if preview is available:
 
-1. Start or reuse `npx framevideo preview` for the current project.
-2. Open the Studio project URL in the Codex in-app browser.
-3. Navigate to the Digital Human panel, Voice panel, or account/login area that needs Chanjing access.
-4. Click the login/configuration button so the app shows the credential modal.
-5. Let the user enter `app_id` and `secret_key` in that modal.
-6. Re-check `/api/projects/:id/chanjing/auth/status` after the user confirms login, then continue listing people/voices or generating the asset.
+1. Start or reuse `npx framevideo preview`.
+2. Open the Studio project URL in the in-app browser.
+3. Navigate to Digital Human, Voice, or account/login panel.
+4. Click login to start OAuth CLI Web Login.
+5. Let the user complete browser authorization.
+6. Re-check `GET /api/projects/:id/chanjing/auth/status`, then continue.
 
-Use command-line/env guidance only when the browser UI cannot be opened or the user explicitly requests a non-interactive setup. Never print, echo, or save secret values outside the shared credential store.
+Use CLI-only guidance only when the browser UI is unavailable or the user requests non-interactive setup. Never print or save tokens outside the shared credential store.
 
-## API Surface
+## Hard Rules
 
-Prefer `ChanjingOpenApiClient` over hand-written fetch calls:
+### `person_id` and `voice_id` sources
 
-- `listDigitalPersonTags()` uses `/common/tag_list?business_type=1`
-- `listCommonDigitalPersons({ page, size, tagIds, source })` uses `/list_common_dp`
-- `listCustomisedPersons({ page, size, source })` uses `/list_customised_person`
-- `createDigitalHumanVideo(options)` uses `/create_video`
-- `getDigitalHumanVideo(id)` uses `/video`
-- `getUserInfo()` uses `/user_info`
+| Who picks | `person_id` | `voice_id` |
+| --------- | ----------- | ---------- |
+| **User provides** explicit ids | Use directly — no re-fetch or list validation required | Use directly |
+| **Agent selects** | Must come from `GET /api/projects/:id/digital-humans/common` or `POST /api/projects/:id/digital-humans/custom` after OAuth | Must come from `GET /api/projects/:id/tts/voices` (optionally filtered by tags), or the selected public person's `audioManId` |
 
-OpenAPI base URL defaults to `https://open-api.chanjing.cc/open/v1`. Override with `CHANJING_OPENAPI_BASE_URL`; `CHANJING_API_URL` is also supported and gets `/open/v1` appended.
+When the agent selects:
 
-## Recommended Talking-Head Defaults
+- Do not invent ids, use fixtures, copied payloads, plugin-client list results, or text-generation status ids.
+- Text-generated people: wait until the person appears in `/digital-humans/custom` before using that id.
+- Compare `name`, `cover`, `previewVideoUrl`, `audioManId`, `figureType`, `width`, `height`, and `digital_person_type`; do not pick the first candidate blindly.
+- Tag filtering for public resources: see [studio-routes.md](./references/studio-routes.md).
 
-For normal spoken-presenter digital-human videos, start from these defaults unless the user asks for a different delivery target.
+When the user provides ids, pass them straight into `saveWebsiteProject` payload. If synthesis fails, report the error — do not second-guess by re-listing.
 
-Default 1080p presenter:
+### Other non-negotiables
 
-```ts
-{
-  screenWidth: 1920,
-  screenHeight: 1080,
-  resolutionRate: 0,
-  model: 0,
-  speed: 1,
-  pitch: 1,
-  volume: 100,
-  hideSubtitle: true,
-  personX: 0,
-  personY: 0,
-  personWidth: person.width,
-  personHeight: person.height,
-  bgColor: "#ffffff",
-  backway: 1,
-}
-```
-
-High-quality final delivery:
-
-```ts
-{
-  screenWidth: 3840,
-  screenHeight: 2160,
-  resolutionRate: 1,
-  model: 1,
-  speed: 0.95,
-  pitch: 1,
-  volume: 100,
-  hideSubtitle: true,
-  bgColor: "#ffffff",
-  backway: 1,
-}
-```
-
-Transparent presenter overlay for FrameVideo compositing:
-
-```ts
-{
-  screenWidth: 1920,
-  screenHeight: 1080,
-  resolutionRate: 0,
-  model: 1,
-  speed: 1,
-  pitch: 1,
-  hideSubtitle: true,
-  isRgbaMode: true,
-  personX: 0,
-  personY: 0,
-  backway: 1,
-}
-```
-
-Parameter guidance:
-
-- `hideSubtitle: true` is the preferred default because FrameVideo captions are easier to style, animate, and edit. Use `false` only when the user explicitly wants Chanjing platform subtitles burned into the generated video.
-- `model: 0` is good for iteration and ordinary 1080p output; use `model: 1` for final delivery, close-up presenters, 4K, or transparent overlay assets.
-- Keep `speed` between `0.9` and `1.05` for most talking-head videos. Use `0.95` for serious explainers and `1.05` for upbeat short-form delivery.
-- Keep `pitch: 1` unless the selected voice sounds obviously too low or too sharp.
-- `resolutionRate: 0` means 1080p; `resolutionRate: 1` means 4K.
-- Avoid `driveMode: "random"` for formal spoken presenter videos; normal sequential driving is steadier.
-- Use `isRgbaMode: true` only for custom digital humans that support four-channel WebM output. RGBA mode normally omits subtitles and background, which is ideal for compositing into FrameVideo.
+- No direct OpenAPI digital-human generation — `createDigitalHumanVideo()` returns 501.
+- Never pass a digital-human id as `projectId`.
+- Never hand-author `workspace_v2`.
+- Download generated video to `assets/digital-humans/` before referencing in composition HTML.
+- Do not use render-time network URLs in compositions.
 
 ## Standard Workflow
 
-1. Confirm the digital-human source: `common` for public people, `custom` for user-trained people. If unclear, start with `common`.
-2. Check auth with `getChanjingOpenApiAuthStatus()` or the Studio auth status route. If missing, open the preview/Studio login UI and surface the credential modal for the user whenever possible; ask for `app_id` and `secret_key` directly only when the UI route is unavailable.
-3. List candidates before choosing. For common people, include tag filters if the user described style, age, role, or gender. Compare `name`, `cover`, `previewVideoUrl`, `audioManId`, `audioName`, `figureType`, `width`, and `height`; do not blindly pick the first candidate.
-4. Select `audioManId`. Public people often include a matching voice; custom people may require the returned or user-selected voice.
-5. Ask for subtitle preference before creating the task unless the current workflow already supplied it. Use `hideSubtitle: true` when the user wants no subtitles; use `false` only when they explicitly want platform subtitles.
-6. Create the task with `createDigitalHumanVideo`. Keep defaults conservative: 1920x1080, `resolutionRate: 0`, `model: 0`, `hideSubtitle: true`, person at x/y 0 unless a layout requires otherwise.
-7. Poll `getDigitalHumanVideo(taskId)` until a terminal status. Treat `video_url` as success; throw or report `msg`, failed status, or timeout.
-8. Always download generated digital-human videos into the project's asset library before wiring them into a composition. Use `assets/digital-humans/<slug>.mp4` for normal output and `assets/digital-humans/<slug>.webm` for VP9-alpha/RGBA output; return and store the project-relative asset path.
-9. When editing an `.html` composition, add the generated local asset as a normal FrameVideo video element and then run `npx framevideo lint` plus `npx framevideo validate`.
+1. **Auth** — check status; if missing, run Missing Credentials UX above.
+2. **Resolve ids** — user-provided ids → use as-is; agent selection → list via Studio routes (people + voices).
+3. **Layout** — derive direction/canvas from person dimensions; full-canvas presenter by default. See [website-project-payload.md](./references/website-project-payload.md).
+4. **Save** — `saveWebsiteProject(payload)`; verify `project_id` is returned.
+5. **Submit** — `submitWebsiteVideo({ projectId: saved.project_id })`; verify `task_id`.
+6. **Poll** — `getDigitalHumanVideo(taskId)` until finished or terminal failure. See [api-enums.md](./references/api-enums.md).
+7. **Download + wire** — save to `assets/digital-humans/`, then wire into composition (below).
 
-## Studio Route Workflow
-
-When working through Studio or a local server, prefer the existing routes in `packages/cli/src/server/studioServer.ts`:
-
-```text
-GET  /api/projects/:id/digital-humans/tags
-GET  /api/projects/:id/digital-humans/common?tagIds=1&tagIds=2
-POST /api/projects/:id/digital-humans/custom
-POST /api/projects/:id/digital-humans/generate
-```
-
-`/digital-humans/generate` expects:
-
-```json
-{
-  "person": { "id": "person-id", "source": "common" },
-  "text": "Script to speak",
-  "audioManId": "voice-id",
-  "outputName": "presenter-intro",
-  "duration": 8
-}
-```
-
-The route creates the Chanjing task, waits for completion, downloads the generated video into `assets/digital-humans/`, and returns `assetPath`, `taskId`, `durationSeconds`, `videoUrl`, and `previewUrl`.
-
-## Direct TypeScript Pattern
-
-Use this pattern from repo code, scripts, or tests:
+## End-to-End TypeScript Pattern
 
 ```ts
-import { mkdir } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ChanjingOpenApiClient } from "../packages/cli/src/tts/chanjingOpenapi.js";
 
 const client = new ChanjingOpenApiClient();
-const { digitalHumans } = await client.listCommonDigitalPersons({ page: 1, size: 30 });
-const person = digitalHumans.find((item) => item.audioManId);
-if (!person?.audioManId) throw new Error("No suitable digital human with audioManId");
 
-const taskId = await client.createDigitalHumanVideo({
-  person,
-  text: "欢迎使用 FrameVideo 生成数字人视频。",
-  audioManId: person.audioManId,
-  screenWidth: 1920,
-  screenHeight: 1080,
-  hideSubtitle: true,
-});
+// Agent selection example — skip listing when user already supplied person_id / voice_id
+const commonRes = await fetch(`/api/projects/${projectId}/digital-humans/common`);
+const { digitalHumans } = await commonRes.json();
+const person = digitalHumans.find((p) => p.audioManId);
+if (!person) throw new Error("No suitable digital human found");
 
+const voicesRes = await fetch(`/api/projects/${projectId}/tts/voices`);
+const { voices } = await voicesRes.json();
+const voiceId = person.audioManId ?? voices[0]?.id;
+if (!voiceId) throw new Error("No voice available");
+
+const isVertical = (person.height ?? 0) > (person.width ?? 0);
+const canvas = isVertical
+  ? { width: 1080, height: 1920 }
+  : { width: 1920, height: 1080 };
+
+const payload = {
+  project_id: "",
+  name: "产品介绍口播",
+  direction: isVertical ? "vertical" : "horizontal",
+  canvas,
+  scenes: [
+    {
+      key: "scene-1",
+      duration: 8,
+      background: { type: "color", color: "#ffffff" },
+      speech: { text: "大家好，欢迎了解我们的产品。", voice_id: voiceId, show_subtitles: false },
+      tracks: [
+        {
+          key: "presenter",
+          type: "person",
+          z_index: 10,
+          elements: [
+            {
+              key: "person-1",
+              person_id: person.id,
+              source: "common",
+              figure_type: person.figureType ?? "whole_body",
+              x: 0,
+              y: 0,
+              width: canvas.width,
+              height: canvas.height,
+              mouth_mode: 256,
+              backway: 2,
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+const saved = await client.saveWebsiteProject(payload);
+if (!saved.project_id) throw new Error("Chanjing did not return project_id");
+
+const submitted = await client.submitWebsiteVideo({ projectId: saved.project_id });
+if (!submitted.task_id) throw new Error("Chanjing did not return task_id");
+
+const TERMINAL_FAIL = new Set([40, 41, 50, 1101, 999]);
 let videoUrl: string | undefined;
 for (let i = 0; i < 180; i++) {
-  const video = await client.getDigitalHumanVideo(taskId);
-  if (video.video_url) {
+  const video = await client.getDigitalHumanVideo(submitted.task_id);
+  if (video.status === 30 && video.video_url) {
     videoUrl = video.video_url;
     break;
   }
-  if (video.msg && /fail|error|失败/i.test(video.msg)) throw new Error(video.msg);
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+  if (video.status !== undefined && TERMINAL_FAIL.has(video.status)) {
+    throw new Error(video.msg ?? `Task failed: status ${video.status}`);
+  }
+  await new Promise((r) => setTimeout(r, 2000));
 }
-if (!videoUrl) throw new Error(`Timed out waiting for digital-human task ${taskId}`);
+if (!videoUrl) throw new Error(`Timed out waiting for task ${submitted.task_id}`);
 
-await mkdir(join(projectDir, "assets", "digital-humans"), { recursive: true });
+const outDir = join(projectDir, "assets", "digital-humans");
+await mkdir(outDir, { recursive: true });
+const assetPath = join(outDir, "presenter-intro.mp4");
+const res = await fetch(videoUrl);
+await writeFile(assetPath, Buffer.from(await res.arrayBuffer()));
 ```
 
-Reuse existing repo helpers for slugging, polling, or downloading when editing `studioServer.ts`; do not duplicate them unless you are building an isolated test fixture.
+Reuse existing repo helpers for slugging, polling, or downloading when editing `studioServer.ts`.
 
 ## Composition Wiring
 
-Generated digital-human videos must be stored as project assets under `assets/digital-humans/`. Do not reference Chanjing `videoUrl` directly from composition HTML, Studio timeline entries, generated templates, or examples; download first, then reference the project-relative asset path.
+Keep the visual `<video>` muted; add a separate `<audio>` clip for voiceover timing. See the `framevideo` skill for clip conventions.
 
 ```html
-<video
-  class="clip"
-  src="assets/digital-humans/presenter-intro.mp4"
-  data-start="0"
-  data-duration="8"
-  data-track-index="1"
-  muted
-  playsinline
-></video>
+<video class="clip" src="assets/digital-humans/presenter-intro.mp4"
+  data-start="0" data-duration="8" data-track-index="1" muted playsinline></video>
+<audio class="clip" src="assets/digital-humans/presenter-intro.mp4"
+  data-start="0" data-duration="8" data-track-index="10" data-volume="1"></audio>
 ```
 
-For talking-head overlays, keep the digital human on a higher track than the background. If the asset has an opaque background and the user wants a transparent presenter, generate the video first, then use the `framevideo-media` background-removal workflow to create a VP9-alpha `.webm`.
-
-## Selection Rules
-
-- Public library request: list common people, optionally with tags.
-- User-trained or uploaded person request: list custom people.
-- Public people may require `figureType`; use the selected candidate's `figureType`.
-- Prefer candidates matching the user's role and tone; if no guidance is given, choose a clear, youthful, presenter-like option with a preview and matching `audioManId`.
-- Do not invent ids. Use ids returned by Chanjing or ids explicitly supplied by the user.
-
-## Subtitle Rules
-
-- Ask for `show` or `hide` before task creation unless the surrounding workflow already decided.
-- Default to hidden only when operating through the current Studio route or when the user did not request platform subtitles and a non-interactive workflow must continue.
-- If the user wants styled captions in the final FrameVideo composition, prefer hiding Chanjing platform subtitles and adding FrameVideo captions separately.
+- Never add silence placeholders for generated digital-human audio.
+- Transparent presenter: invoke `framevideo-media` remove-background after download.
+- Captions: use synthesis timing fields when available; otherwise invoke `framevideo-media` transcribe.
 
 ## Safety
 
-- Never print access tokens, app secrets, or the contents of the credential store.
+- Never print access tokens or credential-store contents.
 - Do not commit generated credentials or local API keys.
-- Do not use render-time network fetches in compositions. Download the generated digital-human video first and reference the local asset.
-- Avoid duplicating standalone `chanjing-video-compose` Python auth scripts in this repo; adapt through `ChanjingOpenApiClient` and the existing auth store.
+- Avoid duplicating standalone `chanjing-video-compose` Python auth scripts.
+
+## References
+
+- [website-project-payload.md](./references/website-project-payload.md) — field reference, layout defaults, minimal JSON
+- [studio-routes.md](./references/studio-routes.md) — Studio routes, plugin client, tag filtering
+- [api-enums.md](./references/api-enums.md) — status codes and polling logic

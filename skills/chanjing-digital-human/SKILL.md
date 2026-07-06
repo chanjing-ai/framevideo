@@ -39,7 +39,7 @@ Use CLI-only guidance only when the browser UI is unavailable or the user reques
 
 | Who picks | `person_id` | `voice_id` |
 | --------- | ----------- | ---------- |
-| **User provides** explicit ids | Use directly — no re-fetch or list validation required | Use directly |
+| **User provides** explicit ids | Use the provided id, but fetch that person's real `figure_type`, `width`, and `height` from `GET /api/projects/:id/digital-humans/common` or `POST /api/projects/:id/digital-humans/custom` before layout | Use directly |
 | **Agent selects** | Must come from `GET /api/projects/:id/digital-humans/common` or `POST /api/projects/:id/digital-humans/custom` after OAuth | Must come from `GET /api/projects/:id/tts/voices` (optionally filtered by tags), or the selected public person's `audioManId` |
 
 When the agent selects:
@@ -49,7 +49,7 @@ When the agent selects:
 - Compare `name`, `cover`, `previewVideoUrl`, `audioManId`, `figureType`, `width`, `height`, and `digital_person_type`; do not pick the first candidate blindly.
 - Tag filtering for public resources: see [studio-routes.md](./references/studio-routes.md).
 
-When the user provides ids, pass them straight into `saveWebsiteProject` payload. If synthesis fails, report the error — do not second-guess by re-listing.
+When the user provides ids, keep the provided `person_id` and `voice_id` as authoritative. Still fetch the matching digital-human record before layout so `figure_type`, `width`, and `height` reflect the real person; if no matching person exists, report that error instead of falling back to `whole_body`.
 
 ### Other non-negotiables
 
@@ -62,8 +62,8 @@ When the user provides ids, pass them straight into `saveWebsiteProject` payload
 ## Standard Workflow
 
 1. **Auth** — check status; if missing, run Missing Credentials UX above.
-2. **Resolve ids** — user-provided ids → use as-is; agent selection → list via Studio routes (people + voices).
-3. **Layout** — derive direction/canvas from person dimensions; full-canvas presenter by default. See [website-project-payload.md](./references/website-project-payload.md).
+2. **Resolve ids** — user-provided ids → keep ids authoritative but fetch the matching person metadata for `figure_type`, `width`, and `height`; agent selection → list via Studio routes (people + voices).
+3. **Layout** — derive direction/canvas from real person dimensions; full-canvas presenter by default. See [website-project-payload.md](./references/website-project-payload.md).
 4. **Save** — `saveWebsiteProject(payload)`; verify `project_id` is returned.
 5. **Submit** — `submitWebsiteVideo({ projectId: saved.project_id })`; verify `task_id`.
 6. **Poll** — `getDigitalHumanVideo(taskId)` until finished or terminal failure. See [api-enums.md](./references/api-enums.md).

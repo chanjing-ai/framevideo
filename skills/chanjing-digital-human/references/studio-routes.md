@@ -18,13 +18,17 @@ DELETE /api/projects/:id/chanjing/auth
 
 ```text
 GET  /api/projects/:id/digital-humans/common?tagIds=1&tagIds=2
+POST /api/projects/:id/digital-humans/common/detail
 GET  /api/projects/:id/digital-humans/tags
 POST /api/projects/:id/digital-humans/custom
+POST /api/projects/:id/digital-humans/custom/detail
 POST /api/projects/:id/digital-humans/sync
 POST /api/projects/:id/digital-humans/text
 POST /api/projects/:id/digital-humans/text/save
 GET  /api/projects/:id/digital-humans/text/photo/status
 ```
+
+Detail routes use `POST` with JSON body `{ "id": "..." }`. Use them to fetch the selected person's `figureType`, dimensions, and preview metadata before saving a website project.
 
 `/digital-humans/generate` returns 501 by design (compatibility stub).
 
@@ -55,8 +59,10 @@ Prefer `ChanjingOpenApiClient` from `packages/cli/src/tts/chanjingOpenapi.ts` ov
 | Method | Plugin path |
 | ------ | ----------- |
 | `listCommonDigitalPersons({ page, size, tagIds })` | `/digital_humans/common/list` |
+| `getCommonDigitalPerson(id)` | `/digital_humans/common/detail` |
 | `listCommonDigitalPersonTags()` | `/digital_humans/common/tags` |
 | `listCustomisedPersons({ page, size })` | `/digital_humans/custom/list` |
+| `getCustomisedDigitalPerson(id)` | `/digital_humans/custom/detail` |
 | `listCommonAudio({ page, size, tagIds })` | `/voices/common/list` |
 | `listCommonVoiceTags()` | `/voices/common/tags` |
 | `listCustomisedAudio({ page, size })` | `/voices/custom/list` |

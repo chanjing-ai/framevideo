@@ -1,11 +1,57 @@
 ---
 name: framevideo-media
-description: Asset preprocessing for FrameVideo compositions — text-to-speech narration (Kokoro), audio/video transcription (Whisper), and background removal for transparent overlays (u2net). Use when generating voiceover from text, transcribing speech for captions, removing the background from a video or image to use as a transparent overlay, choosing a TTS voice or whisper model, or chaining these (TTS → transcribe → captions). Each command downloads its own model on first run.
+description: Asset preprocessing for FrameVideo compositions — text-to-speech narration, Chanjing background music and sound effect downloads, audio/video transcription (Whisper), and background removal for transparent overlays (u2net). Use when generating voiceover from text, downloading BGM or SFX, transcribing speech for captions, removing the background from a video or image to use as a transparent overlay, choosing a TTS voice or whisper model, or chaining these (TTS → transcribe → captions).
 ---
 
 # FrameVideo Media Preprocessing
 
-Three CLI commands that produce assets for compositions: `tts` (speech), `transcribe` (timestamps), and `remove-background` (transparent video). Each downloads a model on first run and caches it under `~/.cache/framevideo/`. Drop the output into the project, then reference it from the composition HTML — see the `framevideo` skill for the audio/video element conventions.
+CLI commands that produce assets for compositions: `tts` (speech), `chanjing music` (background music), `chanjing sound-effect` / `chanjing sfx` (sound effects), `transcribe` (timestamps), and `remove-background` (transparent video). Drop the output into the project, then reference it from the composition HTML — see the `framevideo` skill for the audio/video element conventions.
+
+## Background Music vs Sound Effects
+
+Use the two Chanjing audio paths intentionally:
+
+- Background music (BGM): `chanjing music`, long track or chorus, `assets/music/`, default `data-volume="0.12"`, default `data-track-index="20"`.
+- Sound effects (SFX): `chanjing sound-effect` or `chanjing sfx`, short event cues, `assets/sfx/`, default `data-volume="0.8"`, default `data-track-index="30"`.
+- Both must be downloaded to local project assets before being referenced; never use remote Chanjing/OSS URLs directly in composition HTML.
+
+## Background Music (`chanjing music`)
+
+Use Chanjing OAuth-backed platform music when a user asks for background music, BGM, soundtrack, or chorus extraction from the Chanjing library. The command downloads the selected track to a local project asset and prints an `<audio>` snippet; never place remote Chanjing/OSS URLs directly in composition HTML.
+
+```bash
+npx framevideo auth status
+npx framevideo chanjing music categories --json
+npx framevideo chanjing music list --category <category-id> --compact
+npx framevideo chanjing music download --id <music-id> --output assets/music/<name>.mp3 --volume 0.12
+npx framevideo chanjing music download --id <music-id> --chorus --duration 10 --json
+```
+
+Defaults:
+
+- Assets download under `assets/music/` when `--output` is omitted.
+- `--output` supports `<name>` and `<id>` placeholders.
+- Suggested background volume defaults to `0.12`; raise toward `0.22` only when there is no narration.
+- `--chorus` calls the Chanjing chorus extraction endpoint and downloads the returned segment.
+
+## Sound Effects (`chanjing sound-effect` / `chanjing sfx`)
+
+Use Chanjing OAuth-backed platform sound effects when a user asks for UI clicks, whooshes, transitions, impact hits, notification sounds, or other short cues. The command downloads the selected effect to a local project asset and prints an `<audio>` snippet.
+
+```bash
+npx framevideo auth status
+npx framevideo chanjing music categories --json     # shared audio category hints
+npx framevideo chanjing sound-effect list --category <category-id> --compact
+npx framevideo chanjing sound-effect download --id <effect-id> --output assets/sfx/<name>.mp3 --volume 0.8
+npx framevideo chanjing sfx download --id <effect-id> --start 2.4 --json
+```
+
+Defaults:
+
+- Assets download under `assets/sfx/` when `--output` is omitted.
+- `--output` supports `<name>` and `<id>` placeholders.
+- Suggested SFX volume defaults to `0.8`; use `0.6-1` depending on the cue and overall mix.
+- SFX does not support chorus extraction.
 
 ## Text-to-Speech (`tts`)
 

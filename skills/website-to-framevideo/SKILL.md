@@ -93,12 +93,13 @@ Build index.html and compositions following the architecture and pacing chosen i
 ## Step 6: Validate & Deliver
 
 **Read:** [references/step-6-validate.md](references/step-6-validate.md)
+**Use:** `framevideo-visual-qa` for final visual review.
 
-Lint, validate, take snapshots scaled to video length (formula: `max(beats × 3, ceil(duration_seconds / 2))`), and review each one. Fix issues before delivering. Deliver the localhost Studio project URL — only render to MP4 on explicit user request.
+Lint, validate, inspect, take snapshots scaled to video length (formula: `max(beats × 3, ceil(duration_seconds / 2))`), and review each one. Use visual QA to confirm brand assets do not obscure the core message and captions/CTA do not collide with B-roll, product UI, or digital humans. Fix issues before delivering. Deliver the localhost Studio project URL — only render to MP4 on explicit user request.
 
 **Deliver something you're proud of.** Before handing off, ask yourself: would I post this on social media with my name on it? If not, fix what's wrong.
 
-**Gate:** `npx framevideo lint` and `npx framevideo validate` pass with zero errors, and the final response includes the active Studio project URL.
+**Gate:** `npx framevideo lint`, `npx framevideo validate`, and `npx framevideo inspect` pass with zero unaddressed issues, visual QA passes, and the final response includes the active Studio project URL.
 
 ---
 
@@ -126,15 +127,15 @@ Beat count is not in this table intentionally — it should come from the storyb
 
 ### Reference Files
 
-| File                                                                               | When to read                                                                                                                                   |
-| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| [step-0-capture.md](references/step-0-capture.md)                                  | Step 0 — capture, understand the brand and product, write strategy-first site summary                                                          |
-| [step-1-design.md](references/step-1-design.md)                                    | Step 1 — write DESIGN.md brand cheat sheet (5 sections, 250-350 lines; 50-line fast-path for billboard-style social ads)                       |
-| [step-2-brief.md](references/step-2-brief.md)                                      | Step 2 — align on message, narrative arc, audience with user                                                                                   |
-| [capabilities.md](references/capabilities.md)                                      | Steps 2 & 5 — full inventory of what FrameVideo can do (24 sections). Scan the TOC during the brief, deep-dive specific sections during build |
-| [step-3-storyboard.md](references/step-3-storyboard.md)                            | Step 3 — storyboard + script (combined) with user review gate                                                                                  |
-| [step-4-vo.md](references/step-4-vo.md)                                            | Step 4 — TTS provider choice, generation, timing                                                                                               |
-| [step-5-build.md](references/step-5-build.md)                                      | Step 5 — build index.html + compositions                                                                                                       |
-| [step-6-validate.md](references/step-6-validate.md)                                | Step 6 — lint, validate, snapshots (scaled to video length), preview                                                                           |
-| [techniques.md](../framevideo/references/techniques.md)                           | Steps 3 & 5 — 13 primitive animation techniques with code patterns (adapt, don't copy-paste)                                                   |
+| File                                                                              | When to read                                                                                                                                  |
+| --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| [step-0-capture.md](references/step-0-capture.md)                                 | Step 0 — capture, understand the brand and product, write strategy-first site summary                                                         |
+| [step-1-design.md](references/step-1-design.md)                                   | Step 1 — write DESIGN.md brand cheat sheet (5 sections, 250-350 lines; 50-line fast-path for billboard-style social ads)                      |
+| [step-2-brief.md](references/step-2-brief.md)                                     | Step 2 — align on message, narrative arc, audience with user                                                                                  |
+| [capabilities.md](references/capabilities.md)                                     | Steps 2 & 5 — full inventory of what FrameVideo can do (24 sections). Scan the TOC during the brief, deep-dive specific sections during build |
+| [step-3-storyboard.md](references/step-3-storyboard.md)                           | Step 3 — storyboard + script (combined) with user review gate                                                                                 |
+| [step-4-vo.md](references/step-4-vo.md)                                           | Step 4 — TTS provider choice, generation, timing                                                                                              |
+| [step-5-build.md](references/step-5-build.md)                                     | Step 5 — build index.html + compositions                                                                                                      |
+| [step-6-validate.md](references/step-6-validate.md)                               | Step 6 — lint, validate, snapshots (scaled to video length), preview                                                                          |
+| [techniques.md](../framevideo/references/techniques.md)                           | Steps 3 & 5 — 13 primitive animation techniques with code patterns (adapt, don't copy-paste)                                                  |
 | [html-in-canvas-patterns.md](../framevideo/references/html-in-canvas-patterns.md) | Step 5 — complete code patterns for HTML-in-Canvas effects (lives in the framevideo skill)                                                    |

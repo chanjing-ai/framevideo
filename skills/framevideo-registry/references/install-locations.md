@@ -20,7 +20,7 @@ Created automatically by `framevideo init`. If it doesn't exist when you run `ad
 
 ```json
 {
-  "$schema": "https://framevideo.chanjing.com/schema/framevideo.json",
+  "$schema": "https://www.chanjing.cc/schema/framevideo.json",
   "registry": "https://raw.githubusercontent.com/chanjing/framevideo/main/registry",
   "paths": {
     "blocks": "compositions",

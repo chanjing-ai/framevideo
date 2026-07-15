@@ -144,7 +144,7 @@ npx framevideo add caption-highlight         # install a specific one
 | Lava texture              | `caption-texture`            | Bold, dramatic               |
 | Weight shift              | `caption-weight-shift`       | Elegant, typographic         |
 
-Browse all with previews: [framevideo.chanjing.com/catalog](https://framevideo.chanjing.com/catalog)
+Browse all with previews: [www.chanjing.cc/catalog](https://www.chanjing.cc/catalog)
 
 Caption components ship with transparent backgrounds — they're pure overlays. If the underlying video is bright or busy, add a contrast layer (e.g. a semi-transparent dark div) in the host composition beneath the caption sub-composition, not inside the component itself.
 

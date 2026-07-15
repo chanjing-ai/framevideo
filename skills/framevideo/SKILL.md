@@ -61,6 +61,10 @@ For small edits (fix a color, adjust timing, add one element), skip straight to 
 Before writing ANY composition HTML — verify you have a visual identity from Step 1. If you're reaching for `#333`, `#3b82f6`, or `Roboto`, you skipped it.
 </HARD-GATE>
 
+### Visual QA Skill
+
+Use the `framevideo-visual-qa` skill when creating a new composition, making substantial layout/caption/asset/layering changes, fixing visual issues, or before declaring a composition visually ready. That skill owns reusable video QA rules for safe areas, text/background contrast, text overflow, unintentional overlap, and motion collisions. Keep project-specific brand identity in `frame.md`, `design.md`, or `DESIGN.md`; keep general visual QA method in the skill.
+
 ## Layout Before Animation
 
 Position every element where it should be at its **most visible moment** — the frame where it's fully entered, correctly placed, and not yet exiting. Write this as static HTML+CSS first. No GSAP yet.
@@ -284,6 +288,24 @@ Video must be `muted playsinline`. Audio is always a separate `<audio>` element:
 ></audio>
 ```
 
+For background music from the Chanjing platform, use the CLI to download a local asset first:
+
+```bash
+npx framevideo chanjing music list --compact
+npx framevideo chanjing music download --id <music-id> --chorus --duration 10 --json
+```
+
+Use the returned `htmlSnippet` or author the same shape manually. Keep BGM local under `assets/music/`; do not reference remote Chanjing/OSS URLs directly in composition HTML. Suggested BGM volume is `0.10-0.22`; use `data-volume="0.12"` when speech or digital-human narration is present.
+
+For sound effects from the Chanjing platform, download the SFX asset first and place it at the event time:
+
+```bash
+npx framevideo chanjing sound-effect list --compact
+npx framevideo chanjing sfx download --id <effect-id> --volume 0.8 --json
+```
+
+Keep SFX local under `assets/sfx/`. Use short, event-specific `<audio>` clips with `data-start` set to the exact cue time, `data-track-index="30"` or higher, and `data-volume="0.6-1"` depending on the mix.
+
 ## Timeline Contract
 
 - All timelines start `{ paused: true }` — the player controls playback
@@ -393,6 +415,7 @@ Never print, echo, or commit tokens or credential-store contents. Do not fake ge
 - [ ] `npx framevideo inspect` passes, or every reported overflow is intentionally marked
 - [ ] Contrast warnings addressed (see Quality Checks below)
 - [ ] Animation choreography verified (see Quality Checks below)
+- [ ] `framevideo-visual-qa` applied for new compositions and significant visual changes
 
 ## Quality Checks
 
@@ -474,6 +497,7 @@ Skip on small edits (fixing a color, adjusting one duration). Run on new composi
 
 ## References (loaded on demand)
 
+- **`framevideo-visual-qa` skill** — Visual QA for safe areas, overlap, overflow, contrast, dynamic text fitting, and motion collisions. Use after new compositions or major layout/caption/asset changes.
 - **[references/captions.md](references/captions.md)** — Captions, subtitles, lyrics, karaoke synced to audio. Tone-adaptive style detection, per-word styling, text overflow prevention, caption exit guarantees, word grouping. Read when adding any text synced to audio timing.
 - **[references/audio-reactive.md](references/audio-reactive.md)** — Audio-reactive animation: map frequency bands and amplitude to GSAP properties. Read when visuals should respond to music, voice, or sound.
 - **[references/css-patterns.md](references/css-patterns.md)** — CSS+GSAP marker highlighting: highlight, circle, burst, scribble, sketchout. Deterministic, fully seekable. Read when adding visual emphasis to text.

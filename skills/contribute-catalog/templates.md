@@ -319,7 +319,7 @@ Copy-paste starter templates for each component type. These embed the proven pat
 
 ```json
 {
-  "$schema": "https://framevideo.chanjing.com/schema/registry-item.json",
+  "$schema": "https://www.chanjing.cc/schema/registry-item.json",
   "name": "BLOCKNAME",
   "type": "framevideo:block",
   "title": "Human-Readable Title",
@@ -341,7 +341,7 @@ Copy-paste starter templates for each component type. These embed the proven pat
 
 ```json
 {
-  "$schema": "https://framevideo.chanjing.com/schema/registry-item.json",
+  "$schema": "https://www.chanjing.cc/schema/registry-item.json",
   "name": "COMPONENTNAME",
   "type": "framevideo:component",
   "title": "Human-Readable Title",

@@ -85,7 +85,9 @@ The pre-fix-era flow took longer specifically because it caught these problems. 
 
 ## Lint + Validate + Snapshot
 
-The `framevideo` skill (which you loaded in Step 5) already covers the mechanics of linting, validating, and snapshotting. Follow those rules — run lint, validate, take snapshots scaled to the video length (formula: `max(beats × 3, ceil(duration_seconds / 2))`). Fix errors. This step adds the **pipeline-specific verification** on top of that.
+The `framevideo` skill (which you loaded in Step 5) already covers the mechanics of linting, validating, and snapshotting. Use `framevideo-visual-qa` for the visual review: safe areas, overlap, overflow, contrast, dynamic text, and motion collisions. Follow those rules — run lint, validate, inspect, take snapshots scaled to the video length (formula: `max(beats × 3, ceil(duration_seconds / 2))`). Fix errors. This step adds the **pipeline-specific verification** on top of that.
+
+For website-derived videos, visual QA must also confirm captured brand assets do not cover the headline or proof points, product UI does not sit behind same-colored text, and captions/CTA stay clear of B-roll, digital-human faces/bodies, and lower thirds.
 
 **Errors:** Fix ALL of them. These are real problems — missing timeline registration, broken scripts, missing assets.
 

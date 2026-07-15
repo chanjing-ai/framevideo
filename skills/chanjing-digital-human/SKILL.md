@@ -37,10 +37,10 @@ Use CLI-only guidance only when the browser UI is unavailable or the user reques
 
 ### `person_id` and `voice_id` sources
 
-| Who picks | `person_id` | `voice_id` |
-| --------- | ----------- | ---------- |
-| **User provides** explicit ids | Use the provided id, but fetch that person's real `figure_type`, `width`, and `height` from `GET /api/projects/:id/digital-humans/common` or `POST /api/projects/:id/digital-humans/custom` before layout | Use directly |
-| **Agent selects** | Must come from `GET /api/projects/:id/digital-humans/common` or `POST /api/projects/:id/digital-humans/custom` after OAuth | Must come from `GET /api/projects/:id/tts/voices` (optionally filtered by tags), or the selected public person's `audioManId` |
+| Who picks                      | `person_id`                                                                                                                                                                                               | `voice_id`                                                                                                                    |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **User provides** explicit ids | Use the provided id, but fetch that person's real `figure_type`, `width`, and `height` from `GET /api/projects/:id/digital-humans/common` or `POST /api/projects/:id/digital-humans/custom` before layout | Use directly                                                                                                                  |
+| **Agent selects**              | Must come from `GET /api/projects/:id/digital-humans/common` or `POST /api/projects/:id/digital-humans/custom` after OAuth                                                                                | Must come from `GET /api/projects/:id/tts/voices` (optionally filtered by tags), or the selected public person's `audioManId` |
 
 When the agent selects:
 
@@ -57,17 +57,23 @@ When the user provides ids, keep the provided `person_id` and `voice_id` as auth
 - Never pass a digital-human id as `projectId`.
 - Never hand-author `workspace_v2`.
 - Download generated video to `assets/digital-humans/` before referencing in composition HTML.
+- Download Chanjing background music to `assets/music/` before referencing it in composition HTML.
+- Download Chanjing sound effects to `assets/sfx/` before referencing them in composition HTML.
 - Do not use render-time network URLs in compositions.
 
 ## Standard Workflow
 
 1. **Auth** — check status; if missing, run Missing Credentials UX above.
 2. **Resolve ids** — user-provided ids → keep ids authoritative but fetch the matching person metadata for `figure_type`, `width`, and `height`; agent selection → list via Studio routes (people + voices).
-3. **Layout** — derive direction/canvas from real person dimensions; full-canvas presenter by default. See [website-project-payload.md](./references/website-project-payload.md).
-4. **Save** — `saveWebsiteProject(payload)`; verify `project_id` is returned.
-5. **Submit** — `submitWebsiteVideo({ projectId: saved.project_id })`; verify `task_id`.
-6. **Poll** — `getDigitalHumanVideo(taskId)` until finished or terminal failure. See [api-enums.md](./references/api-enums.md).
-7. **Download + wire** — save to `assets/digital-humans/`, then wire into composition (below).
+3. **Presenter intent** — decide the final FrameVideo role before layout:
+   - Use avatar/PIP/side presenter when the viewer should focus on UI, code, charts, product screenshots, diagrams, or dense instructional content.
+   - Use full-body/full-height presenter when the digital human is the host, spokesperson, greeter, course opener, product recommender, or primary visual subject.
+   - For mixed videos, generate a clean full-canvas presenter source first, then crop/scale/mask per scene in FrameVideo composition HTML.
+4. **Layout** — derive direction/canvas from real person dimensions; full-canvas presenter by default. See [website-project-payload.md](./references/website-project-payload.md).
+5. **Save** — `saveWebsiteProject(payload)`; verify `project_id` is returned.
+6. **Submit** — `submitWebsiteVideo({ projectId: saved.project_id })`; verify `task_id`.
+7. **Poll** — `getDigitalHumanVideo(taskId)` until finished or terminal failure. See [api-enums.md](./references/api-enums.md).
+8. **Download + wire** — save to `assets/digital-humans/`, then wire into composition (below).
 
 ## End-to-End TypeScript Pattern
 
@@ -90,9 +96,7 @@ const voiceId = person.audioManId ?? voices[0]?.id;
 if (!voiceId) throw new Error("No voice available");
 
 const isVertical = (person.height ?? 0) > (person.width ?? 0);
-const canvas = isVertical
-  ? { width: 1080, height: 1920 }
-  : { width: 1920, height: 1080 };
+const canvas = isVertical ? { width: 1080, height: 1920 } : { width: 1920, height: 1080 };
 
 const payload = {
   project_id: "",
@@ -165,15 +169,43 @@ Reuse existing repo helpers for slugging, polling, or downloading when editing `
 Keep the visual `<video>` muted; add a separate `<audio>` clip for voiceover timing. See the `framevideo` skill for clip conventions.
 
 ```html
-<video class="clip" src="assets/digital-humans/presenter-intro.mp4"
-  data-start="0" data-duration="8" data-track-index="1" muted playsinline></video>
-<audio class="clip" src="assets/digital-humans/presenter-intro.mp4"
-  data-start="0" data-duration="8" data-track-index="10" data-volume="1"></audio>
+<video
+  class="clip"
+  src="assets/digital-humans/presenter-intro.mp4"
+  data-start="0"
+  data-duration="8"
+  data-track-index="1"
+  muted
+  playsinline
+></video>
+<audio
+  class="clip"
+  src="assets/digital-humans/presenter-intro.mp4"
+  data-start="0"
+  data-duration="8"
+  data-track-index="10"
+  data-volume="1"
+></audio>
 ```
 
 - Never add silence placeholders for generated digital-human audio.
 - Transparent presenter: invoke `framevideo-media` remove-background after download.
 - Captions: use synthesis timing fields when available; otherwise invoke `framevideo-media` transcribe.
+
+## Music and Sound Effects
+
+Chanjing platform BGM and SFX use the same OAuth plugin client and local-asset rule as generated videos:
+
+```bash
+framevideo chanjing music list --compact
+framevideo chanjing music download --id <music-id> --chorus --duration 10 --json
+framevideo chanjing sound-effect list --compact
+framevideo chanjing sfx download --id <effect-id> --volume 0.8 --json
+```
+
+The BGM CLI calls plugin paths `/music/category`, `/music/list`, and `/music/extract_chorus`, downloads the selected URL into `assets/music/`, and returns an `<audio>` snippet with `data-volume="0.12"` by default. Use low volume under speech or digital-human narration.
+
+The SFX CLI calls `/music_effect/list`, downloads the selected URL into `assets/sfx/`, and returns an `<audio>` snippet with `data-volume="0.8"` and `data-track-index="30"` by default. Use SFX for short event cues, not as background beds.
 
 ## Safety
 

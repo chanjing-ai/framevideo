@@ -57,6 +57,52 @@ Use stable dimensions and object-fit so generated image aspect ratios do not shi
 />
 ```
 
+## Presenter layout modes
+
+Start from the downloaded full-canvas presenter source, then choose the final composition treatment per scene.
+
+Avatar/PIP presenter for tutorials and dense UI:
+
+```css
+.presenter-avatar {
+  position: absolute;
+  right: 48px;
+  bottom: 48px;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center top;
+}
+```
+
+Side presenter for horizontal explainers:
+
+```css
+.presenter-side {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 520px;
+  height: 1080px;
+  object-fit: cover;
+  object-position: right bottom;
+}
+```
+
+Full-height presenter for host-led moments:
+
+```css
+.presenter-full {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center bottom;
+}
+```
+
 ## Caption and presenter safety
 
 - Keep captions above background/B-roll and below presenter-only overlays when needed. Track `8` is the common caption track.

@@ -42,6 +42,18 @@ POST /api/projects/:id/tts/voices/sync
 
 `/tts` returns 501 by design (compatibility stub).
 
+### Background music and sound effects
+
+There is no Studio music or sound-effect library panel in the first implementation. Use CLI commands and then drag or paste the local asset/snippet into the project:
+
+```text
+framevideo chanjing music categories --json
+framevideo chanjing music list --compact
+framevideo chanjing music download --id <music-id> --chorus --duration 10 --json
+framevideo chanjing sound-effect list --compact
+framevideo chanjing sfx download --id <effect-id> --volume 0.8 --json
+```
+
 ## Tag filtering (agent selection only)
 
 `tagIds` only applies to public people and public voices:
@@ -56,19 +68,23 @@ Use tag ids returned by the tag dictionary APIs. Multiple tag ids follow the web
 
 Prefer `ChanjingOpenApiClient` from `packages/cli/src/tts/chanjingOpenapi.ts` over hand-written fetch for **save / submit / poll** synthesis. Despite the legacy name, it targets the plugin API with OAuth Bearer tokens.
 
-| Method | Plugin path |
-| ------ | ----------- |
-| `listCommonDigitalPersons({ page, size, tagIds })` | `/digital_humans/common/list` |
-| `getCommonDigitalPerson(id)` | `/digital_humans/common/detail` |
-| `listCommonDigitalPersonTags()` | `/digital_humans/common/tags` |
-| `listCustomisedPersons({ page, size })` | `/digital_humans/custom/list` |
-| `getCustomisedDigitalPerson(id)` | `/digital_humans/custom/detail` |
-| `listCommonAudio({ page, size, tagIds })` | `/voices/common/list` |
-| `listCommonVoiceTags()` | `/voices/common/tags` |
-| `listCustomisedAudio({ page, size })` | `/voices/custom/list` |
-| `saveWebsiteProject(payload)` | `/projects/save` |
-| `submitWebsiteVideo({ projectId, ... })` | `/videos/submit` |
-| `getDigitalHumanVideo(taskId)` | `/videos/status?task_id=...` |
+| Method                                                             | Plugin path                     |
+| ------------------------------------------------------------------ | ------------------------------- |
+| `listCommonDigitalPersons({ page, size, tagIds })`                 | `/digital_humans/common/list`   |
+| `getCommonDigitalPerson(id)`                                       | `/digital_humans/common/detail` |
+| `listCommonDigitalPersonTags()`                                    | `/digital_humans/common/tags`   |
+| `listCustomisedPersons({ page, size })`                            | `/digital_humans/custom/list`   |
+| `getCustomisedDigitalPerson(id)`                                   | `/digital_humans/custom/detail` |
+| `listCommonAudio({ page, size, tagIds })`                          | `/voices/common/list`           |
+| `listCommonVoiceTags()`                                            | `/voices/common/tags`           |
+| `listCustomisedAudio({ page, size })`                              | `/voices/custom/list`           |
+| `listMusicCategories()`                                            | `/music/category`               |
+| `listMusic({ categories, id, direction, page, page_size })`        | `/music/list`                   |
+| `extractMusicChorus({ url, duration })`                            | `/music/extract_chorus`         |
+| `listMusicEffects({ categories, id, direction, page, page_size })` | `/music_effect/list`            |
+| `saveWebsiteProject(payload)`                                      | `/projects/save`                |
+| `submitWebsiteVideo({ projectId, ... })`                           | `/videos/submit`                |
+| `getDigitalHumanVideo(taskId)`                                     | `/videos/status?task_id=...`    |
 
 Paths are relative to the plugin base URL.
 

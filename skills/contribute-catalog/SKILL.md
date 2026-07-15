@@ -60,7 +60,7 @@ Use a 2-3 letter prefix. ALL element IDs must use this prefix to avoid collision
 
 ```json
 {
-  "$schema": "https://framevideo.chanjing.com/schema/registry-item.json",
+  "$schema": "https://www.chanjing.cc/schema/registry-item.json",
   "name": "{block-name}",
   "type": "framevideo:block",
   "title": "{Human Title}",
@@ -82,7 +82,7 @@ Use a 2-3 letter prefix. ALL element IDs must use this prefix to avoid collision
 
 ```json
 {
-  "$schema": "https://framevideo.chanjing.com/schema/registry-item.json",
+  "$schema": "https://www.chanjing.cc/schema/registry-item.json",
   "name": "{component-name}",
   "type": "framevideo:component",
   "title": "{Human Title}",

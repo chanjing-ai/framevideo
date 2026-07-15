@@ -11,9 +11,18 @@ Do not use `createDigitalHumanVideo(options)` (501 stub). Do not hand-author `wo
 ## Default layout
 
 - Derive `direction` and canvas from the selected person's `width`/`height`: if `height > width` → `vertical` + `1080×1920`; if `width >= height` → `horizontal` + `1920×1080`. If dimensions are missing, default horizontal.
-- Unless the user asks for side layout, PIP, avatar crop, or a specific box, make the presenter element fill the whole canvas (`x:0, y:0, width:canvas.width, height:canvas.height`).
-- Generate a clean full-canvas source video first; crop/scale/mask in FrameVideo composition HTML if the final edit needs split layout.
+- Unless the user asks for a source video in a specific box, make the generated presenter element fill the whole canvas (`x:0, y:0, width:canvas.width, height:canvas.height`).
+- Generate a clean full-canvas source video first; crop/scale/mask in FrameVideo composition HTML when the final edit needs side layout, PIP, avatar crop, or split-screen.
 - Talking-head drafts: set presenter `backway: 2` unless the user wants forward-only playback.
+
+## Presenter role selection
+
+Choose the final FrameVideo layout from the narrative role, not only from the digital-human asset shape:
+
+- **Avatar/PIP** — use for software tutorials, code walkthroughs, admin panels, charts, data explanations, course narration, or any scene where screenshots and text carry the main information. Keep the presenter small enough that it does not block product UI, commands, captions, or charts.
+- **Side presenter** — use for horizontal explainers where the presenter should stay visible while the main scene uses most of the frame. This is a good default for dense product demos.
+- **Full-body/full-height presenter** — use for greetings, intros, outros, brand/product pitches, course openings, livestream-style selling, and scenes where personality and body language are the main signal.
+- **Mixed videos** — keep the Chanjing generation full-canvas, then vary avatar/side/full-body treatment per scene in FrameVideo HTML.
 
 ## Top-level fields
 

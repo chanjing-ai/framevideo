@@ -1,11 +1,11 @@
 ---
 name: chanjing-digital-human
-description: Generate Chanjing digital-human videos via website-project synthesis and wire them into FrameVideo compositions. Use when listing public/custom digital humans or voices, checking Chanjing OAuth login, submitting/polling synthesis tasks, or wiring assets into compositions. For local Kokoro TTS fallback see framevideo-media; for composition HTML conventions see framevideo.
+description: Generate Chanjing digital-human videos via website-project synthesis, use Chanjing AI Creation for AIGC image/video assets, and wire Chanjing-generated assets into FrameVideo compositions. Use when listing public/custom digital humans or voices, checking Chanjing OAuth login, submitting/polling digital-human synthesis tasks, planning/submitting/downloading Chanjing AI Creation image/video tasks, or wiring assets into compositions. For local Kokoro TTS fallback see framevideo-media; for composition HTML conventions see framevideo.
 ---
 
 # Chanjing Digital Human
 
-Access Chanjing website-side digital humans, voices, and synthesis tasks from FrameVideo. Reuse the OAuth plugin API client in `packages/cli/src/tts/chanjingOpenapi.ts` and the shared auth store in `packages/cli/src/auth/store.ts` — do not copy standalone credential scripts.
+Access Chanjing website-side digital humans, voices, synthesis tasks, and AI Creation image/video tasks from FrameVideo. Reuse the OAuth plugin API client in `packages/cli/src/tts/chanjingOpenapi.ts` and the shared auth store in `packages/cli/src/auth/store.ts` — do not copy standalone credential scripts.
 
 ## Auth Contract
 
@@ -74,6 +74,19 @@ When the user provides ids, keep the provided `person_id` and `voice_id` as auth
 6. **Submit** — `submitWebsiteVideo({ projectId: saved.project_id })`; verify `task_id`.
 7. **Poll** — `getDigitalHumanVideo(taskId)` until finished or terminal failure. See [api-enums.md](./references/api-enums.md).
 8. **Download + wire** — save to `assets/digital-humans/`, then wire into composition (below).
+
+## Chanjing AI Creation
+
+For non-presenter AIGC image/video assets, read [ai-creation.md](./references/ai-creation.md). This covers:
+
+- `creation_type: 3` for images and `creation_type: 4` for videos.
+- Fetching active model lists through `framevideo chanjing ai-models`.
+- Building payloads from each model's `params_config.fields`.
+- Idempotent task fingerprints and `.framevideo/ai-creation-tasks/*.json` metadata.
+- Short submit/sync/download phases.
+- Local asset output under `assets/ai-creation/images/` and `assets/ai-creation/videos/`.
+
+Use this with `framevideo-ai-production/references/chanjing-aigc-handoff.md` when converting Shot plans into real generated assets.
 
 ## End-to-End TypeScript Pattern
 

@@ -7,6 +7,19 @@ description: Create video compositions, animations, title cards, overlays, capti
 
 HTML is the source of truth for video. A composition is an HTML file with `data-*` attributes for timing, a GSAP timeline for animation, and CSS for appearance. The framework handles clip visibility, media playback, and timeline sync.
 
+## AI Production Route
+
+When the user asks to go from an idea, script, plot, storyboard, reference image, or rough video concept to a generated video, invoke `framevideo-ai-production` as the front half of the workflow. That skill turns creative material into Clip, Shot, and Chanjing AIGC plans.
+
+For real Chanjing AI image/video generation:
+
+1. Use `framevideo-ai-production` to produce Shot-level Chanjing AIGC plans.
+2. Use `chanjing-digital-human/references/ai-creation.md` for Chanjing AI Creation model discovery, idempotent submission, short sync polling, download, and local asset paths.
+3. Only compose with local assets under `assets/ai-creation/images/` or `assets/ai-creation/videos/`.
+4. Return here to build the FrameVideo HTML composition, audio, captions, transitions, QA, preview, and render.
+
+Do not directly insert remote Chanjing output URLs into composition HTML.
+
 ## Approach
 
 ### Discovery (exploratory requests only)

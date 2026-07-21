@@ -6,136 +6,200 @@ description: |
 
 # Website to FrameVideo
 
-Capture a website, then produce a professional video from it.
+Orchestrate the 7-step workflow to capture a website and produce a professional video. This skill is the **workflow coordinator** — each step loads the appropriate skill or reference for implementation details.
 
-Users say things like:
+## When To Use
 
-- "Capture https://... and make me a 25-second product launch video"
-- "Turn this website into a 15-second social ad for Instagram"
-- "Create a 30-second product tour from https://..."
+- User provides a URL and wants a video (product demo, social ad, brand reel)
+- User says "capture this site", "turn this into a video", "make a promo"
+- User wants a video based on existing website content
 
-The workflow has 7 steps. Each produces an artifact that gates the next. By default it's collaborative — gates marked 💬 stop and ask the user. If the user signals autonomous mode ("decide for me", "surprise me"), 💬 user-preference gates are skipped; see step-2-brief.md for how that propagates.
+## Quick Start
 
-**Autonomous mode is NOT "skip all gates."** Auto mode covers user-preference questions (TTS provider, voice, color emphasis, beat count, music yes/no, captions yes/no — where the agent decides on the user's behalf). It does NOT cover quality-verification gates. The following remain non-skippable in auto mode:
+Basic workflow for website → video:
 
-- Asset Audit (Step 3) — viewing contact sheets and justifying USE/SKIP for each asset
-- Per-beat HTML read (Step 5) — structured evidence block per beat
-- DoD checklist (Step 6) — including animation-map, per-warning WCAG verification, audio/motion playback
-- Honest disclosure section (Step 6) — "What I did NOT verify" must appear in your final summary
+```bash
+# User provides URL
+"Make a 30-second product demo video from https://example.com"
 
-If you find yourself reasoning "auto mode says bias toward action, so I'll skip X" — and X is a verification gate, not a preference question — that reasoning is wrong. Bias toward action applies to deciding _what to build_, not to deciding _whether to verify_.
+# System orchestrates:
+1. Capture site (Step 0) → extract brand + content
+2. Create DESIGN.md (Step 1) → lock visual identity
+3. Align on message (Step 2) → get video brief approval 💬
+4. Storyboard + script (Step 3) → get narrative approval 💬
+5. Generate voiceover (Step 4) → produce audio + timing
+6. Build HTML (Step 5) → create FrameVideo composition
+7. Validate + deliver (Step 6) → QA + Studio URL
+```
+
+**Key points:**
+- 💬 = requires user approval gate
+- Each step loads specific skills/references progressively
+- Autonomous mode still requires verification (no skipping QA)
+
+---
+
+## Workflow Overview
+
+Each step produces an artifact that gates the next. Gates marked 💬 require user approval. The workflow loads skills and references progressively — only read what's needed for the current step.
+
+```
+Step 0: Capture & Brand       → Site summary
+Step 1: Brand Identity         → DESIGN.md
+Step 2: Strategy & Messaging   → Video brief 💬
+Step 3: Storyboard + Script    → STORYBOARD.md + SCRIPT.md 💬
+Step 4: VO, Timing + Captions  → Audio + transcript 💬
+Step 5: Build Compositions     → index.html + compositions
+Step 6: Validate & Deliver     → Studio URL
+```
+
+### Autonomous Mode Rules
+
+If user signals autonomous mode ("decide for me", "surprise me"):
+- ✅ **Auto-decide:** TTS provider, voice, colors, beat count, music, captions
+- ❌ **Still required:** Asset audit, per-beat HTML review, DoD checklist, verification disclosure
+
+Autonomous mode = decide preferences, NOT skip verification.
 
 ---
 
 ## Step 0: Capture & Understand the Brand
 
-**Read:** [references/step-0-capture.md](references/step-0-capture.md)
+**Load:** [references/step-0-capture.md](references/step-0-capture.md)
 
-Capture the site, then read the extracted data to understand the **brand and product** — what it does, who it's for, what voice it speaks in, what mood it lives in. The captured assets are a brand toolkit for later, not the building blocks the video is made from.
+Capture the website using appropriate tool, extract brand assets (colors, fonts, images, copy), understand what the product does and who it's for.
 
-**Gate:** Site summary printed — strategy-first (what the product does, who it's for, brand voice) before the asset / color / font inventory.
+**Gate:** Print site summary — strategy-first (product value, audience, brand voice) before asset inventory.
 
 ---
 
 ## Step 1: Brand Identity
 
-**Read:** [references/step-1-design.md](references/step-1-design.md)
+**Load:** [references/step-1-design.md](references/step-1-design.md)
 
-Write DESIGN.md — a brand cheat sheet covering the visual identity: colors, typography, component styles, layout principles. Use `design-styles.json` for exact computed values.
+Write DESIGN.md covering visual identity: color palette, typography, component styles, layout principles. Use `design-styles.json` for exact computed values.
 
-**Speed option:** For fast-pacing videos (billboard-per-beat), DESIGN.md can be a 50-line summary of colors + fonts + do's/don'ts — not a 300-line document. The sub-agent prompt in Step 5 pastes brand values directly, so DESIGN.md depth only matters for complex compositions.
-
-**Gate:** `DESIGN.md` exists (any length) with at minimum: color palette, font choices, and do's/don'ts.
+**Gate:** `DESIGN.md` exists with color palette, font choices, and do's/don'ts.
 
 ---
 
 ## Step 2: Strategy & Messaging
 
-**Read:** [references/step-2-brief.md](references/step-2-brief.md), [references/capabilities.md](references/capabilities.md) (scan the Table of Contents — deep-dive sections only as needed)
+**Load:** [references/step-2-brief.md](references/step-2-brief.md), scan [references/capabilities.md](references/capabilities.md) TOC
 
-Align with the user on **what the video must communicate** before talking visuals or assets. Parse the user's prompt — they probably already gave you the video type and style. Ask only what's missing: the ONE thing this video must say, the narrative arc, and the audience.
+Align with user on **what the video must communicate**. Parse user's prompt for video type and style. Lock the message and narrative arc before storyboarding.
 
-**Gate:** Video type, duration, format, and — critically — the message and narrative arc are locked. Without those, Step 3 can't write a concept-first storyboard.
+**Gate:** Video type, duration, format, message, and narrative arc are locked.
 
 ---
 
 ## Step 3: Storyboard + Script 💬
 
-**Read:** [references/step-3-storyboard.md](references/step-3-storyboard.md)
+**Load:** [references/step-3-storyboard.md](references/step-3-storyboard.md)
 
-Write the storyboard concept-first: message → narrative arc → beats that serve the arc → techniques per beat → brand accents pass at the end. Then write the narration script to match. Present both to the user with a beat-by-beat summary. Iterate until they approve.
+Write storyboard concept-first: message → narrative arc → beats → techniques per beat → brand accents. Write narration script to match. Present both to user for approval.
 
-**Gate:** `STORYBOARD.md` + `SCRIPT.md` exist AND the user has approved the plan.
+**Gate:** `STORYBOARD.md` + `SCRIPT.md` exist AND user has approved the plan.
 
 ---
 
 ## Step 4: VO, Timing + Captions 💬
 
-**Read:** [references/step-4-vo.md](references/step-4-vo.md)
+**Load:** [references/step-4-vo.md](references/step-4-vo.md)
+**Use:** `framevideo-media` for TTS generation, `framevideo-voiceover-ssml` if pronunciation control needed
 
-If Step 2 said no narration — ask about background music, then skip to Step 5. Otherwise: ask the user which TTS provider (Chanjing TTS, ElevenLabs, or Kokoro), generate audio, transcribe, map timestamps to beats. Then ask about captions.
+If no narration requested: ask about background music, skip to Step 5. Otherwise: choose TTS provider, generate audio, transcribe, map timestamps to beats.
 
-**Gate:** Either (a) no narration was requested and storyboard has manual beat timings, or (b) `narration.wav` + `transcript.json` exist and beat timings updated with real durations.
+**Gate:** Either (a) no narration, manual beat timings in storyboard, or (b) `narration.wav` + `transcript.json` exist and beat timings updated.
 
 ---
 
 ## Step 5: Build Compositions
 
-**Read:** The `framevideo` skill (load it — every rule matters)
-**Read:** [references/step-5-build.md](references/step-5-build.md)
+**Load:** `framevideo` skill (entire skill — every rule matters)
+**Load:** [references/step-5-build.md](references/step-5-build.md)
+**Use:** `gsap` for animation (default), other animation adapters as needed
 
-Build index.html and compositions following the architecture and pacing chosen in the storyboard (Step 3). Sub-agents run `framevideo lint` and `framevideo snapshot` on each beat before reporting back.
+Build index.html and beat compositions following storyboard architecture. Sub-agents run `framevideo lint` and `framevideo snapshot` on each beat.
 
-**Gate:** Every `compositions/beat-N.html` has been read top-to-bottom by the main agent against DESIGN.md and STORYBOARD.md. The per-beat checklist lives in [step-5-build.md](references/step-5-build.md).
+**Gate:** Every `compositions/beat-N.html` has been read top-to-bottom by main agent against DESIGN.md and STORYBOARD.md.
 
 ---
 
 ## Step 6: Validate & Deliver
 
-**Read:** [references/step-6-validate.md](references/step-6-validate.md)
-**Use:** `framevideo-visual-qa` for final visual review.
+**Load:** [references/step-6-validate.md](references/step-6-validate.md)
+**Use:** `framevideo-visual-qa` for final review, `framevideo-cli` for validation
 
-Lint, validate, inspect, take snapshots scaled to video length (formula: `max(beats × 3, ceil(duration_seconds / 2))`), and review each one. Use visual QA to confirm brand assets do not obscure the core message and captions/CTA do not collide with B-roll, product UI, or digital humans. Fix issues before delivering. Deliver the localhost Studio project URL — only render to MP4 on explicit user request.
+Run lint, validate, inspect. Take snapshots (formula: `max(beats × 3, ceil(duration_seconds / 2))`). Review each snapshot. Use visual QA to confirm brand assets don't obscure message and captions don't collide with content. Fix issues before delivering.
 
-**Deliver something you're proud of.** Before handing off, ask yourself: would I post this on social media with my name on it? If not, fix what's wrong.
+**Deliver something you're proud of.** Ask: would I post this with my name on it?
 
-**Gate:** `npx framevideo lint`, `npx framevideo validate`, and `npx framevideo inspect` pass with zero unaddressed issues, visual QA passes, and the final response includes the active Studio project URL.
+**Gate:** `npx framevideo lint`, `validate`, `inspect` pass with zero unaddressed issues, visual QA passes, final response includes Studio URL.
 
 ---
 
 ## Quick Reference
 
-### Video Types
-
-Typical constraints by video type — use as a starting point, not a formula. Beat count should follow from the content and the narration, not from a target range.
-
-| Type                  | Typical duration | Duration driver    | Narration             |
-| --------------------- | ---------------- | ------------------ | --------------------- |
-| Social ad (IG/TikTok) | 10–15s           | Platform limit     | Optional              |
-| Product demo          | 30–60s           | Script length      | Full narration        |
-| Feature announcement  | 15–30s           | Feature complexity | Full narration        |
-| Brand reel            | 20–45s           | Music track        | Optional, music focus |
-| Launch teaser         | 10–20s           | Hook energy        | Minimal               |
-
-Beat count is not in this table intentionally — it should come from the storyboard, not from "social ad = 3-4 beats." A social ad for a complex product might need 5 well-timed beats. A brand reel with one strong visual thesis might need 3.
-
-### Format
-
-- **Landscape**: 1920x1080 (default)
-- **Portrait**: 1080x1920 (Instagram Stories, TikTok)
-- **Square**: 1080x1080 (Instagram feed)
+### Typical Video Formats
+- **Landscape:** 1920x1080 (default)
+- **Portrait:** 1080x1920 (Instagram Stories, TikTok)
+- **Square:** 1080x1080 (Instagram feed)
 
 ### Reference Files
 
-| File                                                                              | When to read                                                                                                                                  |
-| --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| [step-0-capture.md](references/step-0-capture.md)                                 | Step 0 — capture, understand the brand and product, write strategy-first site summary                                                         |
-| [step-1-design.md](references/step-1-design.md)                                   | Step 1 — write DESIGN.md brand cheat sheet (5 sections, 250-350 lines; 50-line fast-path for billboard-style social ads)                      |
-| [step-2-brief.md](references/step-2-brief.md)                                     | Step 2 — align on message, narrative arc, audience with user                                                                                  |
-| [capabilities.md](references/capabilities.md)                                     | Steps 2 & 5 — full inventory of what FrameVideo can do (24 sections). Scan the TOC during the brief, deep-dive specific sections during build |
-| [step-3-storyboard.md](references/step-3-storyboard.md)                           | Step 3 — storyboard + script (combined) with user review gate                                                                                 |
-| [step-4-vo.md](references/step-4-vo.md)                                           | Step 4 — TTS provider choice, generation, timing                                                                                              |
-| [step-5-build.md](references/step-5-build.md)                                     | Step 5 — build index.html + compositions                                                                                                      |
-| [step-6-validate.md](references/step-6-validate.md)                               | Step 6 — lint, validate, snapshots (scaled to video length), preview                                                                          |
-| [techniques.md](../framevideo/references/techniques.md)                           | Steps 3 & 5 — 13 primitive animation techniques with code patterns (adapt, don't copy-paste)                                                  |
-| [html-in-canvas-patterns.md](../framevideo/references/html-in-canvas-patterns.md) | Step 5 — complete code patterns for HTML-in-Canvas effects (lives in the framevideo skill)                                                    |
+| File | When to Load |
+|------|--------------|
+| [step-0-capture.md](references/step-0-capture.md) | Step 0: Capture site, write brand summary |
+| [step-1-design.md](references/step-1-design.md) | Step 1: Write DESIGN.md |
+| [step-2-brief.md](references/step-2-brief.md) | Step 2: Align on message and arc |
+| [capabilities.md](references/capabilities.md) | Steps 2 & 5: Scan TOC, deep-dive as needed |
+| [step-3-storyboard.md](references/step-3-storyboard.md) | Step 3: Write storyboard + script |
+| [step-4-vo.md](references/step-4-vo.md) | Step 4: Generate audio and timing |
+| [step-5-build.md](references/step-5-build.md) | Step 5: Build compositions |
+| [step-6-validate.md](references/step-6-validate.md) | Step 6: Validate and deliver |
+
+### Skills Loaded by Step
+
+| Step | Skills |
+|------|--------|
+| 0 | (capture tools) |
+| 1 | (file operations) |
+| 2 | (alignment, no skills) |
+| 3 | (planning, no skills) |
+| 4 | `framevideo-media`, `framevideo-voiceover-ssml` (optional) |
+| 5 | `framevideo`, `gsap`, animation adapters as needed |
+| 6 | `framevideo-cli`, `framevideo-visual-qa` |
+
+---
+
+## Integration
+
+This skill orchestrates:
+- **framevideo** — core composition authoring (Step 5)
+- **framevideo-cli** — validation commands (Step 6)
+- **framevideo-media** — TTS and transcription (Step 4)
+- **framevideo-voiceover-ssml** — pronunciation control (Step 4, optional)
+- **framevideo-visual-qa** — final quality review (Step 6)
+- **gsap** — animation (Step 5, default adapter)
+- **chanjing-digital-human** — if user wants digital human host (Step 4-5)
+
+---
+
+## Validation
+
+After completing workflow:
+- [ ] All gates passed
+- [ ] `npx framevideo lint` passes
+- [ ] `npx framevideo validate` passes
+- [ ] `npx framevideo inspect` passes
+- [ ] Visual QA checklist complete
+- [ ] Studio URL delivered
+- [ ] "What I did NOT verify" section included in summary
+
+---
+
+## Credits And References
+
+- FrameVideo documentation: https://framevideo.dev
+- Workflow references: `references/` directory in this skill

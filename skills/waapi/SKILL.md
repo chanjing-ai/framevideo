@@ -5,7 +5,62 @@ description: Web Animations API adapter patterns for FrameVideo. Use when author
 
 # Web Animations API for FrameVideo
 
-FrameVideo can seek Web Animations API animations through its `waapi` runtime adapter. WAAPI is useful when you want native browser keyframes with JavaScript-created timing and no GSAP dependency.
+## When To Use
+
+Use WAAPI for:
+
+- **Zero-dependency animations** — no external libraries needed
+- **Lightweight DOM motion** — simple transforms and opacity changes
+- **Native browser performance** — browser-optimized keyframe engine
+- **Generated animations** — creating animations from structured data
+- **Minimal bundle size** — when every KB counts
+
+## Do NOT Use
+
+Avoid WAAPI for:
+
+- **Complex timeline sequencing** — use `gsap` (better timeline control)
+- **Default choice** — use `gsap` unless you specifically want zero dependencies
+- **CSS-only decoration** — use `css-animations` (simpler)
+- **3D/WebGL** — use `three`
+- **Designer exports** — use `lottie`
+
+---
+
+## Quick Start
+
+Basic WAAPI animation in FrameVideo:
+
+```html
+<div id="orb" class="clip orb" data-start="2" data-duration="3">Animate me</div>
+
+<script>
+  const orb = document.getElementById("orb");
+  const animation = orb.animate(
+    [
+      { transform: "translateX(-160px) scale(0.8)", opacity: 0 },
+      { transform: "translateX(0) scale(1)", opacity: 1, offset: 0.35 },
+      { transform: "translateX(120px) scale(1.08)", opacity: 1 },
+    ],
+    {
+      duration: 3000,
+      delay: 2000,
+      easing: "cubic-bezier(0.2, 0, 0, 1)",
+      fill: "both",        // REQUIRED for FrameVideo
+      iterations: 1,
+    },
+  );
+
+  animation.pause();     // Pause immediately
+</script>
+```
+
+**Key points:**
+1. Use `fill: "both"` to hold seeked states
+2. Call `animation.pause()` after creation
+3. Use finite `iterations`
+
+---
 
 ## Contract
 
@@ -83,9 +138,17 @@ document.querySelectorAll(".token").forEach((token, index) => {
 After editing a WAAPI composition:
 
 ```bash
-npx framevideo lint
-npx framevideo validate
+npx framevideo lint      # Check structure
+npx framevideo validate  # Check runtime errors
+npx framevideo preview   # Scrub timeline to verify seekability
 ```
+
+**Manual checks:**
+1. **Fill mode** — all animations use `fill: "both"`
+2. **Paused state** — animations paused after creation
+3. **Finite iterations** — no infinite loops
+4. **Seekability** — scrub preview, animation holds at any frame
+5. **Performance** — prefer transform/opacity over layout properties
 
 ## Credits And References
 

@@ -1,233 +1,189 @@
 ---
 name: chanjing-digital-human
-description: Generate Chanjing digital-human videos via website-project synthesis, use Chanjing AI Creation for AIGC image/video assets, and wire Chanjing-generated assets into FrameVideo compositions. Use when listing public/custom digital humans or voices, checking Chanjing OAuth login, submitting/polling digital-human synthesis tasks, planning/submitting/downloading Chanjing AI Creation image/video tasks, or wiring assets into compositions. For local Kokoro TTS fallback see framevideo-media; for composition HTML conventions see framevideo.
+description: Chanjing platform integration for FrameVideo: OAuth-aware digital-human video synthesis, public/custom digital-human and voice selection, Chanjing AI Creation image/video assets, platform BGM/SFX downloads, polling/downloading generated assets, and wiring Chanjing assets into FrameVideo compositions. Use when listing Chanjing people or voices, checking Chanjing auth in a platform workflow, submitting/polling digital-human videos, planning/submitting/downloading AI Creation image/video tasks, downloading Chanjing music or sound effects, or integrating Chanjing-generated assets into FrameVideo. For local Kokoro TTS/transcribe/remove-background use framevideo-media; for composition HTML conventions use framevideo.
 ---
 
-# Chanjing Digital Human
+# Chanjing Platform for FrameVideo
 
-Access Chanjing website-side digital humans, voices, synthesis tasks, and AI Creation image/video tasks from FrameVideo. Reuse the OAuth plugin API client in `packages/cli/src/tts/chanjingOpenapi.ts` and the shared auth store in `packages/cli/src/auth/store.ts` — do not copy standalone credential scripts.
+## When To Use
 
-## Auth Contract
+Use this skill for:
 
-1. `framevideo auth login` or Studio login starts OAuth CLI Web Login.
-2. Tokens live in the shared `oauth` block in `~/.chanjing/credentials` (honors `CHANJING_CONFIG_DIR`).
-3. Plugin requests use `Authorization: Bearer <access_token>`.
-4. Do not use `app_id`, `secret_key`, `CHANJING_OPENAPI_ACCESS_TOKEN`, or `dp_open_app` data.
+- **数字人视频** — 生成蝉镜平台数字人主持视频
+- **AI Creation 资产** — 使用蝉镜 AIGC 生成图片/视频素材
+- **平台音乐/音效** — 下载蝉镜平台背景音乐和音效
+- **OAuth 认证** — 检查/设置蝉镜平台认证
+- **资产集成** — 将蝉镜生成的资产接入 FrameVideo composition
+
+## Do NOT Use
+
+Avoid this skill for:
+
+- **本地 TTS** — 使用 `framevideo-media` (Kokoro TTS)
+- **本地音频处理** — 使用 `framevideo-media` (transcribe, remove-background)
+- **Composition HTML 编写** — 使用 `framevideo`
+- **SSML 语音标记** — 使用 `framevideo-voiceover-ssml`
+
+---
+
+## Quick Start
+
+### 场景 1: 生成数字人视频
 
 ```bash
-framevideo auth status
+# 1. 检查认证
+npx framevideo auth status
+
+# 2. 列出可用数字人和声音
+npx framevideo chanjing people list --json
+npx framevideo chanjing voices list --json
+
+# 3. 创建数字人视频项目
+# (详见 references/website-project-payload.md)
+
+# 4. 下载生成的视频
+# 下载到 assets/digital-humans/
 ```
 
-Studio auth routes: see [studio-routes.md](./references/studio-routes.md).
+### 场景 2: 下载平台音乐
 
-## Missing Credentials UX
+```bash
+# 1. 认证
+npx framevideo auth login
 
-When OAuth is missing during an agent-authored workflow, do not stop at env-var guidance if preview is available:
+# 2. 浏览音乐分类
+npx framevideo chanjing music categories --json
 
-1. Start or reuse `npx framevideo preview`.
-2. Open the Studio project URL in the in-app browser.
-3. Navigate to Digital Human, Voice, or account/login panel.
-4. Click login to start OAuth CLI Web Login.
-5. Let the user complete browser authorization.
-6. Re-check `GET /api/projects/:id/chanjing/auth/status`, then continue.
+# 3. 列出音乐
+npx framevideo chanjing music list --category <id> --compact
 
-Use CLI-only guidance only when the browser UI is unavailable or the user requests non-interactive setup. Never print or save tokens outside the shared credential store.
-
-## Hard Rules
-
-### `person_id` and `voice_id` sources
-
-| Who picks                      | `person_id`                                                                                                                                                                                               | `voice_id`                                                                                                                    |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| **User provides** explicit ids | Use the provided id, but fetch that person's real `figure_type`, `width`, and `height` from `GET /api/projects/:id/digital-humans/common` or `POST /api/projects/:id/digital-humans/custom` before layout | Use directly                                                                                                                  |
-| **Agent selects**              | Must come from `GET /api/projects/:id/digital-humans/common` or `POST /api/projects/:id/digital-humans/custom` after OAuth                                                                                | Must come from `GET /api/projects/:id/tts/voices` (optionally filtered by tags), or the selected public person's `audioManId` |
-
-When the agent selects:
-
-- Do not invent ids, use fixtures, copied payloads, plugin-client list results, or text-generation status ids.
-- Text-generated people: wait until the person appears in `/digital-humans/custom` before using that id.
-- Compare `name`, `cover`, `previewVideoUrl`, `audioManId`, `figureType`, `width`, `height`, and `digital_person_type`; do not pick the first candidate blindly.
-- Tag filtering for public resources: see [studio-routes.md](./references/studio-routes.md).
-
-When the user provides ids, keep the provided `person_id` and `voice_id` as authoritative. Still fetch the matching digital-human record before layout so `figure_type`, `width`, and `height` reflect the real person; if no matching person exists, report that error instead of falling back to `whole_body`.
-
-### Other non-negotiables
-
-- No direct OpenAPI digital-human generation — `createDigitalHumanVideo()` returns 501.
-- Never pass a digital-human id as `projectId`.
-- Never hand-author `workspace_v2`.
-- Download generated video to `assets/digital-humans/` before referencing in composition HTML.
-- Download Chanjing background music to `assets/music/` before referencing it in composition HTML.
-- Download Chanjing sound effects to `assets/sfx/` before referencing them in composition HTML.
-- Do not use render-time network URLs in compositions.
-
-## Standard Workflow
-
-1. **Auth** — check status; if missing, run Missing Credentials UX above.
-2. **Resolve ids** — user-provided ids → keep ids authoritative but fetch the matching person metadata for `figure_type`, `width`, and `height`; agent selection → list via Studio routes (people + voices).
-3. **Presenter intent** — decide the final FrameVideo role before layout:
-   - Use avatar/PIP/side presenter when the viewer should focus on UI, code, charts, product screenshots, diagrams, or dense instructional content.
-   - Use full-body/full-height presenter when the digital human is the host, spokesperson, greeter, course opener, product recommender, or primary visual subject.
-   - For mixed videos, generate a clean full-canvas presenter source first, then crop/scale/mask per scene in FrameVideo composition HTML.
-4. **Layout** — derive direction/canvas from real person dimensions; full-canvas presenter by default. See [website-project-payload.md](./references/website-project-payload.md).
-5. **Save** — `saveWebsiteProject(payload)`; verify `project_id` is returned.
-6. **Submit** — `submitWebsiteVideo({ projectId: saved.project_id })`; verify `task_id`.
-7. **Poll** — `getDigitalHumanVideo(taskId)` until finished or terminal failure. See [api-enums.md](./references/api-enums.md).
-8. **Download + wire** — save to `assets/digital-humans/`, then wire into composition (below).
-
-## Chanjing AI Creation
-
-For non-presenter AIGC image/video assets, read [ai-creation.md](./references/ai-creation.md). This covers:
-
-- `creation_type: 3` for images and `creation_type: 4` for videos.
-- Fetching active model lists through `framevideo chanjing ai-models`.
-- Building payloads from each model's `params_config.fields`.
-- Idempotent task fingerprints and `.framevideo/ai-creation-tasks/*.json` metadata.
-- Short submit/sync/download phases.
-- Local asset output under `assets/ai-creation/images/` and `assets/ai-creation/videos/`.
-
-Use this with `framevideo-ai-production/references/chanjing-aigc-handoff.md` when converting Shot plans into real generated assets.
-
-## End-to-End TypeScript Pattern
-
-```ts
-import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
-import { ChanjingOpenApiClient } from "../packages/cli/src/tts/chanjingOpenapi.js";
-
-const client = new ChanjingOpenApiClient();
-
-// Agent selection example — skip listing when user already supplied person_id / voice_id
-const commonRes = await fetch(`/api/projects/${projectId}/digital-humans/common`);
-const { digitalHumans } = await commonRes.json();
-const person = digitalHumans.find((p) => p.audioManId);
-if (!person) throw new Error("No suitable digital human found");
-
-const voicesRes = await fetch(`/api/projects/${projectId}/tts/voices`);
-const { voices } = await voicesRes.json();
-const voiceId = person.audioManId ?? voices[0]?.id;
-if (!voiceId) throw new Error("No voice available");
-
-const isVertical = (person.height ?? 0) > (person.width ?? 0);
-const canvas = isVertical ? { width: 1080, height: 1920 } : { width: 1920, height: 1080 };
-
-const payload = {
-  project_id: "",
-  name: "产品介绍口播",
-  direction: isVertical ? "vertical" : "horizontal",
-  canvas,
-  scenes: [
-    {
-      key: "scene-1",
-      duration: 8,
-      background: { type: "color", color: "#ffffff" },
-      speech: { text: "大家好，欢迎了解我们的产品。", voice_id: voiceId, show_subtitles: false },
-      tracks: [
-        {
-          key: "presenter",
-          type: "person",
-          z_index: 10,
-          elements: [
-            {
-              key: "person-1",
-              person_id: person.id,
-              source: "common",
-              figure_type: person.figureType ?? "whole_body",
-              x: 0,
-              y: 0,
-              width: canvas.width,
-              height: canvas.height,
-              mouth_mode: 256,
-              backway: 2,
-            },
-          ],
-        },
-      ],
-    },
-  ],
-};
-
-const saved = await client.saveWebsiteProject(payload);
-if (!saved.project_id) throw new Error("Chanjing did not return project_id");
-
-const submitted = await client.submitWebsiteVideo({ projectId: saved.project_id });
-if (!submitted.task_id) throw new Error("Chanjing did not return task_id");
-
-const TERMINAL_FAIL = new Set([40, 41, 50, 1101, 999]);
-let videoUrl: string | undefined;
-for (let i = 0; i < 180; i++) {
-  const video = await client.getDigitalHumanVideo(submitted.task_id);
-  if (video.status === 30 && video.video_url) {
-    videoUrl = video.video_url;
-    break;
-  }
-  if (video.status !== undefined && TERMINAL_FAIL.has(video.status)) {
-    throw new Error(video.msg ?? `Task failed: status ${video.status}`);
-  }
-  await new Promise((r) => setTimeout(r, 2000));
-}
-if (!videoUrl) throw new Error(`Timed out waiting for task ${submitted.task_id}`);
-
-const outDir = join(projectDir, "assets", "digital-humans");
-await mkdir(outDir, { recursive: true });
-const assetPath = join(outDir, "presenter-intro.mp4");
-const res = await fetch(videoUrl);
-await writeFile(assetPath, Buffer.from(await res.arrayBuffer()));
+# 4. 下载
+npx framevideo chanjing music download --id <id> --output assets/music/bg.mp3
 ```
 
-Reuse existing repo helpers for slugging, polling, or downloading when editing `studioServer.ts`.
+### 场景 3: AI Creation 生图/生视频
+
+```bash
+# 使用 AI Creation API 生成图片或视频
+# (详见 references/ai-creation.md)
+```
+
+---
+
+## Routing
+
+Read only what the request needs:
+
+| User intent | Read |
+| --- | --- |
+| Auth status, login, missing credentials, Studio login routes | [studio-routes.md](./references/studio-routes.md) |
+| Select/list public or custom digital humans or voices | [studio-routes.md](./references/studio-routes.md) |
+| Generate digital-human presenter video | [website-project-payload.md](./references/website-project-payload.md), then [api-enums.md](./references/api-enums.md) |
+| Poll digital-human task status or interpret status codes | [api-enums.md](./references/api-enums.md) |
+| Generate Chanjing AI image/video assets | [ai-creation.md](./references/ai-creation.md) |
+| Wire generated presenter, AI B-roll, images, captions, or local assets into FrameVideo | [composition-wiring.md](./references/composition-wiring.md) |
+| Download Chanjing BGM or SFX | [studio-routes.md](./references/studio-routes.md), section “Background music and sound effects” |
+| Use Shot plans from `framevideo-ai-production` for real AIGC generation | [ai-creation.md](./references/ai-creation.md) plus `framevideo-ai-production/references/chanjing-aigc-handoff.md` |
+
+For local-only Kokoro TTS, Whisper transcription, or background removal, use `framevideo-media` instead.
+
+## Platform Rules
+
+- Use OAuth Bearer tokens from the shared Chanjing credential store. Never print, echo, save, or commit tokens.
+- Prefer the existing FrameVideo CLI, Studio routes, and `ChanjingOpenApiClient` in `packages/cli/src/tts/chanjingOpenapi.ts`; do not copy standalone credential scripts.
+- Do not use `app_id`, `secret_key`, `CHANJING_OPENAPI_ACCESS_TOKEN`, or `dp_open_app` data for agent-authored workflows.
+- If OAuth is missing and preview/Studio is available, prefer the Studio login UX instead of stopping at env-var instructions.
+- Download every generated or selected platform asset before referencing it in composition HTML. Do not use render-time remote Chanjing/OSS URLs.
+
+## Asset Locations
+
+Use these local project paths:
+
+| Asset | Local directory |
+| --- | --- |
+| Digital-human videos | `assets/digital-humans/` |
+| AI Creation images | `assets/ai-creation/images/` |
+| AI Creation videos | `assets/ai-creation/videos/` |
+| Chanjing background music | `assets/music/` |
+| Chanjing sound effects | `assets/sfx/` |
+
+## Digital-Human Workflow
+
+1. Check auth. If missing, use Studio login flow from [studio-routes.md](./references/studio-routes.md).
+2. Resolve `person_id` and `voice_id`.
+3. Fetch the selected person's real metadata before layout.
+4. Build a website-project payload from [website-project-payload.md](./references/website-project-payload.md).
+5. Save the website project and verify `project_id`.
+6. Submit video synthesis and verify `task_id`.
+7. Poll using [api-enums.md](./references/api-enums.md).
+8. Download the finished video to `assets/digital-humans/`.
+9. Wire it into FrameVideo using [composition-wiring.md](./references/composition-wiring.md).
+
+### ID Sources
+
+| Who picks | `person_id` | `voice_id` |
+| --- | --- | --- |
+| User provides explicit ids | Use the provided id, but fetch matching person metadata before layout | Use directly |
+| Agent selects | Must come from current Studio/CLI Chanjing list routes after OAuth | Must come from current Chanjing voice list routes, or selected public person's `audioManId` |
+
+Do not invent ids or reuse fixture ids. If a user-provided person id cannot be fetched, report that error instead of falling back to another person.
+
+## AI Creation Workflow
+
+Use this for non-presenter AIGC images/videos such as B-roll, generated backgrounds, concept images, product display clips, transition clips, or abstract visuals.
+
+1. Read [ai-creation.md](./references/ai-creation.md).
+2. Fetch active models with `framevideo chanjing ai-models ...`; do not read backend constants or copied model lists.
+3. Build payloads from the selected model's `params_config.fields`; do not hard-code model options.
+4. Create `.framevideo/ai-creation-tasks/*.json` task metadata before submission.
+5. Apply local and remote idempotency checks before submitting billable tasks.
+6. Submit only missing tasks.
+7. Use short sync runs to poll/download.
+8. Compose only with local files under `assets/ai-creation/images/` or `assets/ai-creation/videos/`.
+
+## Music and SFX Workflow
+
+Use Chanjing platform music/SFX when the user asks for platform BGM, soundtrack, chorus extraction, whooshes, hits, clicks, or transition sounds.
+
+```bash
+npx framevideo chanjing music categories --json
+npx framevideo chanjing music list --compact
+npx framevideo chanjing music download --id <music-id> --chorus --duration 10 --json
+
+npx framevideo chanjing sound-effect list --compact
+npx framevideo chanjing sfx download --id <effect-id> --volume 0.8 --json
+```
+
+Keep BGM under `assets/music/` and SFX under `assets/sfx/`. Use low BGM volume under speech or digital-human narration.
 
 ## Composition Wiring
 
-Keep the visual `<video>` muted; add a separate `<audio>` clip for voiceover timing. See the `framevideo` skill for clip conventions.
+Read [composition-wiring.md](./references/composition-wiring.md) before writing HTML that uses Chanjing assets.
 
-```html
-<video
-  class="clip"
-  src="assets/digital-humans/presenter-intro.mp4"
-  data-start="0"
-  data-duration="8"
-  data-track-index="1"
-  muted
-  playsinline
-></video>
-<audio
-  class="clip"
-  src="assets/digital-humans/presenter-intro.mp4"
-  data-start="0"
-  data-duration="8"
-  data-track-index="10"
-  data-volume="1"
-></audio>
-```
+Core rules:
 
-- Never add silence placeholders for generated digital-human audio.
-- Transparent presenter: invoke `framevideo-media` remove-background after download.
-- Captions: use synthesis timing fields when available; otherwise invoke `framevideo-media` transcribe.
+- Visual video clips are muted.
+- Add a separate `<audio>` clip when the generated video contains narration.
+- Keep captions clear of faces, hands, presenter body, CTA, product UI, and platform subtitles.
+- For styled FrameVideo captions, prefer synthesis timing fields when available; otherwise use `framevideo-media` to transcribe the downloaded local video/audio.
+- For transparent presenter overlays, use `framevideo-media` remove-background after download.
 
-## Music and Sound Effects
+## Hard Stops
 
-Chanjing platform BGM and SFX use the same OAuth plugin client and local-asset rule as generated videos:
+- Do not pass a digital-human id as a website `projectId`.
+- Do not hand-author `workspace_v2`.
+- Do not call compatibility stubs such as direct digital-human generation routes that return 501.
+- Do not insert remote `output_url` or Chanjing/OSS URLs into composition HTML.
+- Do not create duplicate AI Creation tasks when matching local or recent remote task metadata exists.
+
+## Validation
+
+After wiring Chanjing assets into a FrameVideo project:
 
 ```bash
-framevideo chanjing music list --compact
-framevideo chanjing music download --id <music-id> --chorus --duration 10 --json
-framevideo chanjing sound-effect list --compact
-framevideo chanjing sfx download --id <effect-id> --volume 0.8 --json
+npx framevideo lint
+npx framevideo validate
+npx framevideo inspect
 ```
 
-The BGM CLI calls plugin paths `/music/category`, `/music/list`, and `/music/extract_chorus`, downloads the selected URL into `assets/music/`, and returns an `<audio>` snippet with `data-volume="0.12"` by default. Use low volume under speech or digital-human narration.
-
-The SFX CLI calls `/music_effect/list`, downloads the selected URL into `assets/sfx/`, and returns an `<audio>` snippet with `data-volume="0.8"` and `data-track-index="30"` by default. Use SFX for short event cues, not as background beds.
-
-## Safety
-
-- Never print access tokens or credential-store contents.
-- Do not commit generated credentials or local API keys.
-- Avoid duplicating standalone `chanjing-video-compose` Python auth scripts.
-
-## References
-
-- [website-project-payload.md](./references/website-project-payload.md) — field reference, layout defaults, minimal JSON
-- [studio-routes.md](./references/studio-routes.md) — Studio routes, plugin client, tag filtering
-- [api-enums.md](./references/api-enums.md) — status codes and polling logic
+For visual overlap, caption safety, presenter placement, and B-roll readability, use `framevideo-visual-qa`.

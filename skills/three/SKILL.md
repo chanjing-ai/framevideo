@@ -5,7 +5,67 @@ description: Three.js and WebGL adapter patterns for FrameVideo. Use when creati
 
 # Three.js for FrameVideo
 
-FrameVideo supports Three.js through its `three` runtime adapter. The adapter does not own your scene. It publishes FrameVideo time and dispatches a seek event so your composition can render the exact frame.
+## When To Use
+
+Use Three.js for:
+
+- **3D product showcases** — rotating products, exploded views
+- **3D scenes and environments** — backgrounds, animated 3D elements
+- **GLTF model animation** — loading and animating 3D models
+- **Camera motion** — dolly, pan, orbit camera movements
+- **WebGL shader effects** — custom shaders, post-processing
+
+## Do NOT Use
+
+Avoid Three.js for:
+
+- **2D animations** — use `gsap` (simpler and lighter)
+- **GPU compute shaders** — use `typegpu` (better compute pipeline support)
+- **Simple effects** — Three.js is heavy, use lighter alternatives when possible
+- **Text animation** — use HTML + GSAP (better text rendering)
+
+---
+
+## Quick Start
+
+Basic Three.js scene in FrameVideo:
+
+```html
+<canvas id="three-layer" style="position: absolute; inset: 0;"></canvas>
+
+<script type="module">
+  import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.2/+esm";
+
+  const canvas = document.getElementById("three-layer");
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+  renderer.setSize(1920, 1080, false);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(35, 1920/1080, 0.1, 100);
+  camera.position.z = 6;
+
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(2, 2, 2),
+    new THREE.MeshStandardMaterial({ color: 0x64d2ff })
+  );
+  scene.add(mesh);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x223344, 2));
+
+  // Listen for FrameVideo seek events
+  window.addEventListener("fv-seek", (event) => {
+    const time = event.detail.time;
+    mesh.rotation.y = time * 0.7;
+    renderer.render(scene, camera);
+  });
+</script>
+```
+
+**Key points:**
+1. Listen for `fv-seek` event
+2. Render at `event.detail.time`
+3. Avoid `requestAnimationFrame`
+
+---
 
 ## Contract
 

@@ -5,13 +5,57 @@ description: Visual quality review for FrameVideo compositions. Use when checkin
 
 # FrameVideo Visual QA
 
-Use this skill as the visual quality gate for FrameVideo work. It does not define brand identity. `frame.md`, `design.md`, or `DESIGN.md` define the project's colors, fonts, logo rules, and brand-specific constraints. This skill defines the reusable video QA method: layout safety, legibility, contrast, safe areas, and motion collisions.
+## When To Use
 
-## When To Run
+Use this skill for:
 
-Run this after creating a new composition, after changing layout/captions/assets/layering, before saying a video is ready, or whenever the user reports overlap, clipping, unreadable text, bad contrast, or unsafe placement.
+- **Final QA before delivery** — check composition before saying it's ready
+- **After layout changes** — verify no overlap or clipping introduced
+- **Caption/subtitle additions** — ensure text doesn't overlap other elements
+- **Asset placement** — verify logo, CTA, important UI in safe areas
+- **Contrast issues** — fix unreadable text on backgrounds
+- **Animation collisions** — detect overlaps during motion
 
-For tiny edits, run only the checks related to the edit. For new or substantially changed compositions, run the full gate below.
+## Do NOT Use
+
+Avoid this skill for:
+
+- **Brand identity design** — see project's `frame.md` or `DESIGN.md` for brand rules
+- **Animation authoring** — use `framevideo` skill (this is only for QA)
+- **Color/font choices** — this is for legibility, not design decisions
+- **Performance issues** — use `framevideo-cli` skill for render problems
+
+---
+
+## Quick Start
+
+Run visual QA after creating/editing a composition:
+
+```bash
+# 1. Lint structure
+npx framevideo lint
+
+# 2. Validate runtime
+npx framevideo validate
+
+# 3. Visual inspection (samples key frames)
+npx framevideo inspect
+
+# For dense videos, sample more frames
+npx framevideo inspect --samples 15
+
+# Or check specific moments
+npx framevideo inspect --at 1.5,4,7.25
+```
+
+**Manual checks:**
+1. **Hero frame first** — find most crowded moment with all text visible
+2. **Timeline samples** — check entrance, hold, exit frames for each scene
+3. **Safe areas** — keep key content 5% away from edges (96px horizontal, 54px vertical on 1920x1080)
+4. **Contrast** — ensure readable text (WCAG AA minimum)
+5. **No overlaps** — verify no text/logo collisions during animation
+
+---
 
 ## Gate
 

@@ -5,10 +5,67 @@ description: Install and wire registry blocks and components into FrameVideo com
 
 # FrameVideo Registry
 
-The registry provides reusable blocks and components installable via `framevideo add <name>`.
+## When To Use
 
-- **Blocks** — standalone sub-compositions (own dimensions, duration, timeline). Included via `data-composition-src` in a host composition.
-- **Components** — effect snippets (no own dimensions). Pasted directly into a host composition's HTML.
+Use this skill for:
+
+- **Installing blocks** — `framevideo add <block-name>` to install reusable compositions
+- **Installing components** — `framevideo add <component-name>` for effect snippets
+- **Wiring blocks** — integrate installed blocks into host composition
+- **Merging components** — paste component snippets into existing HTML
+- **Registry discovery** — find available blocks/components
+- **Configuration** — manage `framevideo.json` registry settings
+
+## Do NOT Use
+
+Avoid this skill for:
+
+- **Example templates** — use `framevideo init --example <name>` instead
+- **Writing custom compositions** — use `framevideo` skill
+- **Asset preprocessing** — use `framevideo-media`
+- **CLI commands (init, render, etc.)** — use `framevideo-cli`
+
+---
+
+## Quick Start
+
+### Install and wire a block
+
+```bash
+# 1. Install block
+npx framevideo add data-chart
+
+# 2. Wire into host composition (index.html)
+<div
+  data-composition-id="data-chart"
+  data-composition-src="compositions/data-chart.html"
+  data-start="2"
+  data-duration="5"
+  data-track-index="3"
+></div>
+```
+
+### Install and merge a component
+
+```bash
+# 1. Install component
+npx framevideo add grain-overlay
+
+# 2. Copy snippet from CLI output
+# 3. Paste into your composition HTML
+# Component snippets merge directly into HTML (no data-composition-src)
+```
+
+---
+
+## Block vs Component
+
+| Type | Description | Install location | How to use |
+|------|-------------|------------------|------------|
+| **Block** | Standalone sub-composition | `compositions/<name>.html` | Include via `data-composition-src` |
+| **Component** | Effect snippet | `compositions/components/<name>.html` | Paste directly into HTML |
+
+---
 
 ## When to use this skill
 

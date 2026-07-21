@@ -5,7 +5,59 @@ description: Asset preprocessing for FrameVideo compositions — text-to-speech 
 
 # FrameVideo Media Preprocessing
 
-CLI commands that produce assets for compositions: `tts` (speech), `chanjing music` (background music), `chanjing sound-effect` / `chanjing sfx` (sound effects), `transcribe` (timestamps), and `remove-background` (transparent video). Drop the output into the project, then reference it from the composition HTML — see the `framevideo` skill for the audio/video element conventions.
+## When To Use
+
+Use this skill for:
+
+- **Text-to-speech (TTS)** — generate voiceover narration from text (local Kokoro)
+- **Background music (BGM)** — download music tracks from Chanjing platform
+- **Sound effects (SFX)** — download short audio cues (clicks, whooshes, hits)
+- **Transcription** — convert audio/video to timestamped captions (Whisper)
+- **Background removal** — create transparent overlays from video/images (u2net)
+- **Audio workflows** — chain commands (TTS → transcribe → captions)
+
+## Do NOT Use
+
+Avoid this skill for:
+
+- **Digital human videos** — use `chanjing-digital-human`
+- **Chanjing OAuth setup** — use `chanjing-auth`
+- **SSML pronunciation control** — use `framevideo-voiceover-ssml`
+- **Composition HTML** — use `framevideo`
+- **Playing audio in compositions** — use `framevideo` (this skill only generates assets)
+
+---
+
+## Quick Start
+
+Generate narration and captions in 3 steps:
+
+```bash
+# 1. Generate TTS audio
+npx framevideo tts "Hello from FrameVideo" --output assets/narration.wav
+
+# 2. Transcribe to get timestamps
+npx framevideo transcribe assets/narration.wav --output assets/transcript.json
+
+# 3. Reference in composition
+# In index.html:
+# <audio data-src="assets/narration.wav" data-start="0" data-track-index="10"></audio>
+```
+
+For background music:
+
+```bash
+# 1. Authenticate (one-time)
+npx framevideo auth login
+
+# 2. Browse music
+npx framevideo chanjing music list --category <id> --compact
+
+# 3. Download
+npx framevideo chanjing music download --id <music-id> --output assets/music/bg.mp3
+```
+
+---
 
 ## Background Music vs Sound Effects
 
@@ -291,3 +343,44 @@ npx framevideo transcribe narration.wav   # → transcript.json
 ```
 
 Whisper extracts precise word boundaries from the generated audio, so caption timing matches delivery without hand-tuning.
+
+---
+
+## Validation
+
+After preprocessing assets:
+
+```bash
+# Verify audio files
+npx framevideo inspect   # Check audio levels and duration
+
+# Test in preview
+npx framevideo preview   # Verify audio plays correctly in composition
+```
+
+**Manual checks:**
+
+1. **File paths** — assets saved to correct directory (`assets/music/`, `assets/sfx/`, etc.)
+2. **Audio levels** — BGM at 0.12-0.22, SFX at 0.6-1.0, narration at default
+3. **Transcription accuracy** — review `transcript.json` word boundaries
+4. **Background removal quality** — check transparent video for edge artifacts
+5. **Integration** — verify asset referenced correctly in composition HTML
+
+---
+
+## Integration
+
+This skill produces assets consumed by:
+- **framevideo** — reference audio/video in composition HTML
+- **framevideo-voiceover-ssml** — apply SSML markup before TTS generation
+- **chanjing-digital-human** — alternative to local TTS for voiceover
+- **website-to-framevideo** — Step 4 uses this skill for audio generation
+
+---
+
+## Credits And References
+
+- Kokoro TTS: https://github.com/hexgrad/kokoro
+- Whisper transcription: https://github.com/openai/whisper
+- u2net background removal: https://github.com/xuebinqin/U-2-Net
+- Chanjing platform: https://www.chanjing.cc

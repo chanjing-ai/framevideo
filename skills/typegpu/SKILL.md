@@ -5,7 +5,80 @@ description: TypeGPU and raw WebGPU adapter patterns for FrameVideo. Use when cr
 
 # TypeGPU / WebGPU for FrameVideo
 
-FrameVideo supports TypeGPU and raw WebGPU through its `typegpu` runtime adapter. The adapter does not own your pipeline. It publishes FrameVideo time and dispatches a seek event so your composition can render the exact GPU frame.
+## When To Use
+
+Use TypeGPU/WebGPU for:
+
+- **GPU compute shaders** — particle systems, physics simulations
+- **Custom WGSL shaders** — liquid glass, metaballs, ray marching
+- **High-performance effects** — complex fragment shaders, post-processing
+- **Advanced visual effects** — noise fields, reaction-diffusion, fluid simulations
+- **Compute-heavy visuals** — when Three.js is too high-level
+
+## Do NOT Use
+
+Avoid TypeGPU/WebGPU for:
+
+- **Simple 3D scenes** — use `three` (easier and more mature)
+- **2D animations** — use `gsap` (much simpler)
+- **Standard effects** — WebGPU has limited browser support, use WebGL alternatives
+- **Text/UI animation** — use HTML + GSAP (better rendering)
+
+---
+
+## Quick Start
+
+Basic WebGPU fragment shader in FrameVideo:
+
+```html
+<canvas id="gpu-layer" width="1920" height="1080"></canvas>
+
+<script>
+  (async () => {
+    if (!navigator.gpu) return;
+    
+    const adapter = await navigator.gpu.requestAdapter();
+    const device = await adapter.requestDevice();
+    const canvas = document.getElementById("gpu-layer");
+    const ctx = canvas.getContext("webgpu");
+    
+    ctx.configure({ 
+      device, 
+      format: navigator.gpu.getPreferredCanvasFormat() 
+    });
+
+    // Create time uniform buffer
+    const timeUniform = new Float32Array([0]);
+    const timeBuf = device.createBuffer({
+      size: 16,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    });
+
+    // Listen for FrameVideo seek events
+    window.addEventListener("fv-seek", async (event) => {
+      const time = event.detail.time;
+      
+      // Update time uniform
+      timeUniform[0] = time;
+      device.queue.writeBuffer(timeBuf, 0, timeUniform);
+      
+      // Render your pipeline...
+      // [render pass code here]
+      
+      // IMPORTANT: flush GPU work before frame capture
+      await device.queue.onSubmittedWorkDone();
+    });
+  })();
+</script>
+```
+
+**Key points:**
+1. Listen for `fv-seek` event
+2. Update uniforms with `event.detail.time`
+3. Call `await device.queue.onSubmittedWorkDone()` before frame capture
+4. Guard for WebGPU availability
+
+---
 
 ## Contract
 

@@ -5,6 +5,66 @@ description: GSAP animation reference for FrameVideo. Covers gsap.to(), from(), 
 
 # GSAP
 
+## When To Use
+
+Use GSAP for:
+
+- **Scene choreography** — multi-element sequences with precise timing
+- **Complex timelines** — staggered animations, labels, nested sequences
+- **Text/card motion** — captions, title cards, UI element entrances
+- **Audio-synced animation** — beat-timed motion coordinated with voiceover
+- **Most scripted animation** — GSAP is the default animation adapter for FrameVideo
+
+## Do NOT Use
+
+Avoid GSAP for:
+
+- **Simple decorative loops** — use `css-animations` (shimmer, pulse, glow)
+- **Designer-provided After Effects exports** — use `lottie`
+- **3D scenes and WebGL** — use `three`
+- **GPU compute shaders** — use `typegpu`
+- **Zero-dependency requirement** — use `waapi`
+
+When in doubt, **use GSAP** — it's the most versatile and the default choice.
+
+---
+
+## Quick Start
+
+Minimal GSAP animation in FrameVideo:
+
+```html
+<div data-composition-id="main" data-width="1920" data-height="1080">
+  <div class="clip" data-start="0" data-duration="3">
+    <h1 class="title">Hello GSAP</h1>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<script>
+  window.__timelines = window.__timelines || {};
+  const tl = gsap.timeline({ paused: true });
+  
+  // Fade in and slide up
+  tl.from(".title", { 
+    y: 48, 
+    opacity: 0, 
+    duration: 0.6, 
+    ease: "power3.out" 
+  }, 0);
+  
+  window.__timelines["main"] = tl;
+</script>
+```
+
+**Key points:**
+1. Load GSAP from CDN
+2. Create paused timeline
+3. Add tweens with timing
+4. Register on `window.__timelines` with matching composition ID
+
+---
+
 ## FrameVideo Contract
 
 FrameVideo controls GSAP through its `gsap` runtime adapter. Create a paused timeline synchronously, register it on `window.__timelines` with the exact `data-composition-id`, and let FrameVideo seek it.
@@ -232,6 +292,24 @@ Pause or kill off-screen animations.
 - Create tweens before the DOM exists.
 - Skip cleanup — always kill tweens when no longer needed.
 - Use infinite repeat values in FrameVideo compositions. Use finite repeat counts computed from the visible duration.
+
+## Validation
+
+After writing GSAP animations:
+
+```bash
+npx framevideo lint      # Check timeline registration and timing
+npx framevideo validate  # Check for runtime errors
+npx framevideo preview   # Scrub timeline to verify seekability
+```
+
+**Manual checks:**
+
+1. **Timeline registration** — verify `window.__timelines["main"]` matches `data-composition-id`
+2. **Pause state** — timeline created with `paused: true`
+3. **Finite duration** — no infinite loops or `-1` repeat values
+4. **Seekability** — scrub preview timeline, animation should hold at any frame
+5. **No async registration** — timeline created synchronously before FrameVideo init
 
 ## Credits And References
 

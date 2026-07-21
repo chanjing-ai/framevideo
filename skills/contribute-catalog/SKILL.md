@@ -5,7 +5,62 @@ description: Author a new FrameVideo registry block (caption style, VFX block, t
 
 # Contribute to FrameVideo Registry
 
-Guide the user from idea to merged PR for a new registry block or component.
+## When To Use
+
+Use this skill when:
+
+- **Contributing to public catalog** — user wants to add a block/component to upstream FrameVideo registry
+- **Submitting a PR** — user has built a reusable effect and wants to share it
+- **Packaging for registry** — user needs help structuring registry-item.json and files
+
+## Do NOT Use
+
+Avoid this skill for:
+
+- **In-project effects** — use `framevideo` skill for project-specific captions/transitions
+- **Installing existing items** — use `framevideo-registry` skill
+- **Learning FrameVideo** — use `framevideo` skill for composition authoring
+
+---
+
+## Quick Start
+
+Complete contribution workflow:
+
+```bash
+# 1. Clarify what to build
+User: "I want to contribute a Hormozi-style caption block"
+→ Ask: description, visual reference, use case
+
+# 2. Scaffold registry structure
+registry/blocks/cap-hormozi/
+  cap-hormozi.html
+  registry-item.json
+
+# 3. Build the block
+→ Use `framevideo` skill for HTML authoring
+→ Use 2-3 letter prefix for all element IDs (e.g., "hz-")
+
+# 4. Validate
+npx framevideo lint registry/blocks/cap-hormozi/cap-hormozi.html
+npx framevideo add cap-hormozi --dir ./test-project
+
+# 5. Preview
+npx framevideo preview ./test-project
+
+# 6. Ship
+git checkout -b contrib/cap-hormozi
+git add registry/blocks/cap-hormozi/
+git commit -m "Add Hormozi-style caption block"
+# Create PR to framevideo repo
+```
+
+**Key points:**
+- All element IDs must use consistent prefix to avoid collisions
+- Blocks have fixed dimensions/duration, components don't
+- Test with `framevideo add` before submitting PR
+
+---
 
 ## Workflow
 

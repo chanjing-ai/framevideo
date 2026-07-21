@@ -5,7 +5,60 @@ description: Lottie and dotLottie adapter patterns for FrameVideo. Use when embe
 
 # Lottie for FrameVideo
 
-FrameVideo can seek both `lottie-web` and dotLottie players through its `lottie` runtime adapter. Lottie is a strong fit because the animation timeline is already encoded in the asset; FrameVideo only needs a player object it can seek.
+## When To Use
+
+Use Lottie for:
+
+- **After Effects exports** — designer provides .json or .lottie file
+- **Logo animations** — animated brand marks and icons
+- **Pre-made animations** — using LottieFiles library assets
+- **Complex vector motion** — shape morphing, path animations
+- **Design handoff** — designers work in AE, devs integrate directly
+
+## Do NOT Use
+
+Avoid Lottie for:
+
+- **Code-driven animation** — use `gsap` (more flexible)
+- **Simple transforms** — use `gsap` or `css-animations` (lighter)
+- **3D scenes** — use `three`
+- **Text-heavy animation** — Lottie handles text poorly, use HTML + GSAP
+- **Dynamic content** — Lottie animations are static, use programmatic animation
+
+---
+
+## Quick Start
+
+Basic lottie-web animation:
+
+```html
+<div id="logo-lottie" class="lottie-layer"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
+<script>
+  const anim = lottie.loadAnimation({
+    container: document.getElementById("logo-lottie"),
+    renderer: "svg",
+    loop: false,        // REQUIRED for FrameVideo
+    autoplay: false,    // REQUIRED for FrameVideo
+    path: "assets/logo-reveal.json",
+  });
+
+  window.__fvLottie = window.__fvLottie || [];
+  window.__fvLottie.push(anim);
+</script>
+
+<style>
+  .lottie-layer { width: 100%; height: 100%; }
+</style>
+```
+
+**Key points:**
+1. Set `autoplay: false` and `loop: false`
+2. Register on `window.__fvLottie` array
+3. Load from local `assets/`, not remote URLs
+
+---
 
 ## Contract
 

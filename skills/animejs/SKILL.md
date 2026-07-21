@@ -5,7 +5,60 @@ description: Anime.js adapter patterns for FrameVideo. Use when writing Anime.js
 
 # Anime.js for FrameVideo
 
-FrameVideo can seek Anime.js instances through its `animejs` runtime adapter. The composition owns the animation objects; FrameVideo owns the clock.
+## When To Use
+
+Use Anime.js for:
+
+- **Lightweight animations** — smaller bundle size than GSAP (17KB vs 45KB)
+- **Simple DOM/SVG motion** — element entrances, transforms, opacity
+- **Compact syntax** — cleaner for straightforward animations
+- **Porting Anime.js examples** — user provides Anime.js code to adapt
+- **File size constraints** — when every KB matters
+
+## Do NOT Use
+
+Avoid Anime.js for:
+
+- **Complex timeline sequencing** — GSAP has better timeline control and labels
+- **Default choice** — use `gsap` unless you have specific reason for Anime.js
+- **3D or WebGL** — use `three`
+- **CSS-only decoration** — use `css-animations`
+- **GPU shaders** — use `typegpu`
+
+---
+
+## Quick Start
+
+Basic Anime.js animation in FrameVideo:
+
+```html
+<div class="clip" data-start="0" data-duration="3">
+  <div class="mark">Animate me</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/animejs@4.0.2/lib/anime.iife.min.js"></script>
+<script>
+  const anim = anime({
+    targets: ".mark",
+    translateX: 280,
+    rotate: "1turn",
+    opacity: [0, 1],
+    duration: 1200,
+    easing: "easeOutExpo",
+    autoplay: false,  // REQUIRED for FrameVideo
+  });
+
+  window.__fvAnime = window.__fvAnime || [];
+  window.__fvAnime.push(anim);  // Register for seeking
+</script>
+```
+
+**Key points:**
+1. Set `autoplay: false`
+2. Register on `window.__fvAnime` array
+3. Use finite durations
+
+---
 
 ## Contract
 
@@ -107,6 +160,22 @@ After editing a composition that uses Anime.js:
 npx framevideo lint
 npx framevideo validate
 ```
+
+## Validation
+
+After writing Anime.js animations:
+
+```bash
+npx framevideo lint      # Check registration
+npx framevideo validate  # Check runtime errors
+npx framevideo preview   # Scrub timeline to verify seekability
+```
+
+**Manual checks:**
+1. **Registration** — verify all animations pushed to `window.__fvAnime`
+2. **Autoplay disabled** — all animations have `autoplay: false`
+3. **Finite loops** — no infinite `loop: true`, use counted loops
+4. **Seekability** — scrub preview, animation holds at any frame
 
 ## Credits And References
 

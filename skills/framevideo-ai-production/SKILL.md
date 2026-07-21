@@ -5,9 +5,71 @@ description: FrameVideo 的中文 AI 生产子流程。用于从原始剧本、�
 
 # FrameVideo AI 生产工作流
 
-把剧本分镜、视频任务规划、提示词润色和蝉镜 AIGC 任务交接作为一条渐进式生产管线处理。这个 skill 是 `framevideo` 的 AI 生产子流程：它负责把创意整理成可生成的 Clip / Shot / Chanjing AIGC 计划；真实提交、轮询、下载和 composition 回填交给 FrameVideo / Chanjing 相关能力。
+## 何时使用 (When To Use)
 
-主文件只负责判断入口和调度 references；不要一次性加载所有详细规则，除非用户明确要求端到端完整流程。
+使用此 skill 当用户要求：
+
+- **剧本转分镜** — 从原始剧本、故事梗概生成 Clip 级分镜
+- **视频任务规划** — 将 Clip 聚合为 Shot 级视频生成任务
+- **提示词润色** — 将简短创意润色为可直接投喂模型的最终提示词
+- **蝉镜 AIGC 生成** — 使用蝉镜平台生图/生视频
+- **端到端 AI 视频生产** — 从创意到最终 FrameVideo composition 的完整流程
+
+## 不要使用 (Do NOT Use)
+
+避免使用此 skill 当：
+
+- **仅编辑 FrameVideo HTML** — 使用 `framevideo` skill
+- **仅下载蝉镜音乐/音效** — 使用 `framevideo-media` skill
+- **仅配音/字幕** — 使用 `framevideo-voiceover-ssml` + `framevideo-media`
+- **数字人视频** — 使用 `chanjing-digital-human` skill
+- **已有完整素材的手动剪辑** — 使用 `framevideo` skill
+
+---
+
+## 快速开始 (Quick Start)
+
+### 场景 1: 从剧本生成分镜
+
+```
+用户: 帮我把这个剧本转成 AI 视频分镜：
+【剧本内容】
+场景一：清晨，阳光洒进房间...
+```
+
+系统行为：
+1. 读取 `references/storyboard-script-generation.md`
+2. 生成 Clip 级分镜脚本
+3. 输出结构化 Clip 列表
+
+### 场景 2: 规划视频生成任务
+
+```
+用户: 我有 10 个 Clip，帮我规划成视频生成任务
+
+【Clip 列表】
+```
+
+系统行为：
+1. 读取 `references/video-task-planning.md`
+2. 聚合 Clip 为 Shot (每个 Shot ≤15 秒)
+3. 输出 Shot 级任务规划
+
+### 场景 3: 端到端生产
+
+```
+用户: 从这个剧本直接生成视频，用蝉镜 AIGC
+
+【剧本内容】
+```
+
+系统行为：
+1. 读取 `workflow-and-handoff-formats.md`
+2. 剧本 → Clip → Shot → 蝉镜 AIGC Plan
+3. 交接给 `chanjing-digital-human` 执行生成
+4. 回填到 FrameVideo composition
+
+---
 
 ## 核心单位
 

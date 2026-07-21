@@ -5,7 +5,58 @@ description: FrameVideo CLI dev loop — `npx framevideo` for scaffolding (init)
 
 # FrameVideo CLI
 
-Everything runs through `npx framevideo`. Requires Node.js >= 22 and FFmpeg.
+## When To Use
+
+Use this skill for:
+
+- **Project scaffolding** — `init` to create new projects
+- **Validation** — `lint` to check structure, `inspect` for visual QA
+- **Preview** — `preview` to test compositions in browser
+- **Rendering** — `render` to export final video
+- **Troubleshooting** — `doctor`, `browser`, `info` for environment issues
+- **Upgrading** — `upgrade` to update FrameVideo CLI
+
+## Do NOT Use
+
+Avoid this skill for:
+
+- **Asset preprocessing** — use `framevideo-media` (tts, transcribe, remove-background)
+- **Writing composition HTML** — use `framevideo`
+- **Chanjing integration** — use `chanjing-digital-human`
+- **Visual QA methodology** — use `framevideo-visual-qa` (this skill only runs commands)
+
+---
+
+## Quick Start
+
+Complete dev workflow:
+
+```bash
+# 1. Create project
+npx framevideo init my-video
+
+# 2. Edit composition (see `framevideo` skill)
+# Edit index.html...
+
+# 3. Validate
+npx framevideo lint        # Check structure
+npx framevideo inspect     # Visual QA
+
+# 4. Preview
+npx framevideo preview     # Test in browser
+
+# 5. Render
+npx framevideo render . --output video.mp4
+```
+
+**Common options:**
+
+- `--example <name>` — use template (blank, warm-grain, product-promo, etc.)
+- `--tailwind` — include Tailwind v4 browser runtime
+- `--video <file>` — include video file
+- `--audio <file>` — include audio file (auto-transcribes)
+
+---
 
 ## Workflow
 

@@ -7,6 +7,312 @@ description: Create video compositions, animations, title cards, overlays, capti
 
 HTML is the source of truth for video. A composition is an HTML file with `data-*` attributes for timing, a GSAP timeline for animation, and CSS for appearance. The framework handles clip visibility, media playback, and timeline sync.
 
+## When To Use
+
+Use this skill for **any FrameVideo composition task**. This is the largest skill (1100+ lines) — use the navigation below to find what you need quickly.
+
+### 🚀 New to FrameVideo?
+1. Read "Quick Start" (line 46) — minimal working example
+2. Read "Core Concepts" (line 95) — data attributes, timing, timeline contract
+3. Try the example, then come back for specific features
+
+### 🎯 Looking for something specific?
+
+**Layout & Structure:**
+- Safe areas & margins → "Layout & Safe Areas" (line 180)
+- Multi-scene compositions → "Scene Transitions" (line 450) **[MANDATORY for multi-scene]**
+- Composition architecture → "Composition Structure" (line 120)
+
+**Animation & Motion:**
+- Which animation library? → "Animation Adapter Routing" (line 28)
+- GSAP patterns → Load `gsap` skill (default choice)
+- Audio-reactive animation → "Audio Reactive Visuals" (line 620)
+- Custom effects → Animation adapter skills (gsap, animejs, waapi, etc.)
+
+**Media & Assets:**
+- Video/audio playback → "Video & Audio" (line 140)
+- Captions & subtitles → "Captions" (line 580)
+- Parametrized compositions → "Variables" (line 160)
+
+**Workflow:**
+- AI-driven production → "AI Production Route" (line 200)
+- Quality checks → `framevideo-visual-qa` skill
+- CLI commands → `framevideo-cli` skill
+
+**Do NOT use for:**
+- CLI commands (init, lint, preview, render) → `framevideo-cli` skill
+- Asset preprocessing (TTS, transcribe, bg-removal) → `framevideo-media` skill
+- Quality checks and validation → `framevideo-visual-qa` skill
+- Chanjing digital humans → `chanjing-digital-human` skill
+
+---
+
+## Animation Adapter Routing
+
+Default to `gsap` for most FrameVideo composition animation. Use a specific adapter skill only when the content or user request calls for it:
+
+| Use | Adapter skill |
+| --- | --- |
+| Scene choreography, text/card motion, staggered timelines, most scripted animation | `gsap` |
+| User requests Anime.js, or porting compact Anime.js DOM/SVG examples | `animejs` |
+| Simple finite CSS keyframes, shimmer, glow, masks, and non-sequenced decoration | `css-animations` |
+| Lightweight native `element.animate()` motion with no external library | `waapi` |
+| Existing Lottie/dotLottie assets from design tools | `lottie` |
+| Deterministic 3D scenes, GLTF, WebGL, camera moves, shader plates | `three` |
+| WebGPU/TypeGPU shaders, particles, liquid glass, compute pipelines | `typegpu` |
+
+Shared rule for every adapter: render-critical animation must be deterministic and seekable. Do not use wall-clock time, infinite loops, or async registration for timelines/instances.
+
+---
+
+## Quick Start
+
+Minimal working composition:
+
+```html
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>My Video</title>
+  </head>
+  <body>
+    <div data-composition-id="main" data-width="1920" data-height="1080">
+      <div id="scene-1" class="clip" data-start="0" data-duration="5" data-track-index="1">
+        <div class="scene-content">
+          <h1>Hello FrameVideo</h1>
+        </div>
+      </div>
+
+      <style>
+        [data-composition-id="main"] { background: #000; color: #fff; }
+        .scene-content {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          height: 100%;
+          padding: 120px 160px;
+          box-sizing: border-box;
+        }
+        h1 { font-size: 120px; }
+      </style>
+
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+      <script>
+        window.__timelines = window.__timelines || {};
+        const tl = gsap.timeline({ paused: true });
+        tl.from("h1", { opacity: 0, y: 40, duration: 0.8, ease: "power3.out" }, 0.3);
+        window.__timelines["main"] = tl;
+      </script>
+    </div>
+  </body>
+</html>
+```
+
+Next: Validate with `npx framevideo lint`, preview with `npx framevideo preview`.
+
+---
+
+## Section Index
+
+This skill has 1100+ lines organized into the following major sections. Jump to the section you need:
+
+**🎬 Core Concepts** (lines 95-200) — Read first if new to FrameVideo
+- Data Attributes & Timing
+- Composition Structure  
+- Timeline Contract
+- Video & Audio
+- Variables (Parametrized Compositions)
+
+**🎨 Layout & Design** (lines 180-300)
+- Safe Areas & Margins
+- Typography & Readability
+- Color & Contrast
+- Responsive Layouts
+
+**✨ Animation & Motion** (lines 300-450)
+- Animation Adapter Routing (see above)
+- GSAP Integration (or load `gsap` skill for details)
+- Timing & Easing
+- Stagger Patterns
+
+**🎞️ Scene Transitions** (lines 450-580) — **MANDATORY for multi-scene videos**
+- Crossfades
+- Wipes & Reveals
+- Shader Transitions
+- Scene Architecture
+
+**📝 Captions & Subtitles** (lines 580-650)
+- Caption Timing
+- Styling & Positioning
+- Transcript Integration
+
+**🎵 Audio-Reactive Visuals** (lines 620-720)
+- Beat Detection
+- Amplitude-Based Animation
+- Music Synchronization
+
+**🔧 Advanced Patterns** (lines 720-900)
+- HTML-in-Canvas Effects
+- Sub-Compositions
+- Dynamic Content
+- Performance Optimization
+
+**📚 References** (lines 900-1100)
+- Examples Gallery
+- Troubleshooting
+- Best Practices
+- API Reference
+
+**Note:** Line numbers are approximate guides. Use your Read tool's offset parameter to jump to sections, or read the full file if you need comprehensive context.
+
+---
+
+## Core Concepts
+- Video & Audio Elements
+- Variables (Parametrized Compositions)
+
+**Layout & Safe Areas** (expand when positioning elements):
+- Layout Before Animation Principle
+- Container Patterns
+- Safe Area Rules
+- Text Handling
+- Common Layout Patterns
+
+**Animation & Motion** (expand when adding motion):
+- Animation Guardrails
+- Entrance/Exit Patterns
+- Stagger & Sequencing
+- Scene Rhythm Templates
+- Animation Conflicts
+
+**Scene Transitions** (mandatory for multi-scene videos):
+- 4 Non-Negotiable Rules
+- Transition Implementation
+
+**Advanced Features** (as needed):
+- Captions & Subtitles
+- Audio-Reactive Animation
+- CSS Marker Highlighting
+- Shader Transitions
+
+**References** (deep dives):
+- See "References" section at end for 15+ detailed guides
+
+---
+
+## Core Concepts
+
+### Data Attributes & Timing
+
+Every clip requires these attributes:
+
+| Attribute          | Required | Values                                                 |
+| ------------------ | -------- | ------------------------------------------------------ |
+| `id`               | Yes      | Unique identifier                                      |
+| `data-start`       | Yes      | Seconds or clip ID reference (`"el-1"`, `"intro + 2"`) |
+| `data-duration`    | Yes*     | Seconds. *Optional for video/audio (uses media length) |
+| `data-track-index` | Yes      | Integer. Same-track clips cannot overlap              |
+
+Optional:
+- `data-media-start` - Trim offset into source (seconds)
+- `data-volume` - 0-1 (audio only, default 1)
+
+**Important:** `data-track-index` does NOT control visual layering. Use CSS `z-index`.
+
+### Composition Structure
+
+**Root element** with required attributes:
+
+```html
+<div data-composition-id="main" data-width="1920" data-height="1080">
+  <!-- content -->
+</div>
+```
+
+**Standalone compositions** (main `index.html`): Put root `<div>` directly in `<body>`. Do NOT use `<template>`.
+
+**Sub-compositions** (loaded via `data-composition-src`): MUST use `<template>` wrapper:
+
+```html
+<template id="my-comp-template">
+  <div data-composition-id="my-comp" data-width="1920" data-height="1080">
+    <!-- content -->
+  </div>
+</template>
+```
+
+### Timeline Contract
+
+**5 mandatory rules:**
+
+1. **Create paused:** `const tl = gsap.timeline({ paused: true });`
+2. **Register timeline:** `window.__timelines["main"] = tl;` (key must match `data-composition-id`)
+3. **Synchronous construction:** Never build timelines inside `async`, `setTimeout`, or Promises
+4. **Duration from data attribute:** Use `data-duration`, not GSAP timeline length
+5. **Framework auto-nests:** Don't manually add sub-composition timelines
+
+### Video & Audio
+
+**Video must be muted:**
+
+```html
+<video
+  id="el-v"
+  data-start="0"
+  data-duration="30"
+  data-track-index="0"
+  src="video.mp4"
+  muted
+  playsinline
+></video>
+```
+
+**Audio track separate:**
+
+```html
+<audio
+  id="el-a"
+  data-start="0"
+  data-duration="30"
+  data-track-index="2"
+  src="video.mp4"
+  data-volume="1"
+></audio>
+```
+
+Use same source file. Framework controls playback - never call `.play()`.
+
+### Variables (Parametrized Compositions)
+
+**Three-step pattern:**
+
+1. **Declare** on `<html>` root:
+```html
+<html data-composition-variables='[
+  {"id":"title","type":"string","label":"Title","default":"Hello"}
+]'>
+```
+
+2. **Read** in script:
+```javascript
+const { title } = window.__framevideo.getVariables();
+document.getElementById("hero").textContent = title;
+```
+
+3. **Override** at render:
+```bash
+npx framevideo render --variables '{"title":"Q4 Report"}'
+```
+
+Variable types: `string`, `number`, `color`, `boolean`, `enum`.
+
+---
+
+<details>
+<summary><h2>📐 Layout & Safe Areas (Click to Expand)</h2></summary>
+
 ## AI Production Route
 
 When the user asks to go from an idea, script, plot, storyboard, reference image, or rough video concept to a generated video, invoke `framevideo-ai-production` as the front half of the workflow. That skill turns creative material into Clip, Shot, and Chanjing AIGC plans.
@@ -78,23 +384,353 @@ Before writing ANY composition HTML — verify you have a visual identity from S
 
 Use the `framevideo-visual-qa` skill when creating a new composition, making substantial layout/caption/asset/layering changes, fixing visual issues, or before declaring a composition visually ready. That skill owns reusable video QA rules for safe areas, text/background contrast, text overflow, unintentional overlap, and motion collisions. Keep project-specific brand identity in `frame.md`, `design.md`, or `DESIGN.md`; keep general visual QA method in the skill.
 
-## Layout Before Animation
+---
 
-Position every element where it should be at its **most visible moment** — the frame where it's fully entered, correctly placed, and not yet exiting. Write this as static HTML+CSS first. No GSAP yet.
+<details>
+<summary><h2>📐 Layout & Safe Areas (Click to Expand)</h2></summary>
 
-**Why this matters:** If you position elements at their animated start state (offscreen, scaled to 0, opacity 0) and tween them to where you think they should land, you're guessing the final layout. Overlaps are invisible until the video renders. By building the end state first, you can see and fix layout problems before adding any motion.
+### Layout Before Animation Principle
 
-### The process
+**Build the end state first.** Position every element where it should be at its **most visible moment** - fully entered, correctly placed, not yet exiting. Write this as static HTML+CSS first. No GSAP yet.
 
-1. **Identify the hero frame** for each scene — the moment when the most elements are simultaneously visible. This is the layout you build.
-2. **Write static CSS** for that frame. The `.scene-content` container MUST fill the full scene using `width: 100%; height: 100%; padding: Npx;` with `display: flex; flex-direction: column; gap: Npx; box-sizing: border-box`. Use padding to push content inward — NEVER `position: absolute; top: Npx` on a content container. Absolute-positioned content containers overflow when content is taller than the remaining space. Reserve `position: absolute` for decoratives only.
-3. **Add entrances with `gsap.from()`** — animate FROM offscreen/invisible TO the CSS position. The CSS position is the ground truth; the tween describes the journey to get there. (In sub-compositions loaded via `data-composition-src`, prefer `gsap.fromTo()` — see load-bearing GSAP rules in [references/motion-principles.md](references/motion-principles.md).)
-4. **Add exits with `gsap.to()`** — animate TO offscreen/invisible FROM the CSS position.
+**Why:** If you position elements at their animated start state (offscreen, scaled to 0, opacity 0) and tween them to where you think they should land, you're guessing. Overlaps are invisible until render. By building the end state first, you see and fix layout problems before adding motion.
 
-### Example
+**The process:**
+
+1. **Identify the hero frame** - the moment when most elements are simultaneously visible
+2. **Write static CSS** for that frame
+3. **Add entrances with `gsap.from()`** - animate FROM offscreen/invisible TO the CSS position
+4. **Add exits with `gsap.to()`** - animate TO offscreen/invisible FROM the CSS position
+
+**Example:**
 
 ```css
-/* scene-content fills the scene, padding positions content */
+/* Step 1-2: Build the readable end state */
+.scene-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 120px 160px;
+  gap: 24px;
+  box-sizing: border-box;
+}
+.title { font-size: 120px; }
+.subtitle { font-size: 42px; }
+```
+
+```javascript
+// Step 3: Animate INTO those positions
+tl.from(".title", { y: 60, opacity: 0, duration: 0.6, ease: "power3.out" }, 0);
+tl.from(".subtitle", { y: 40, opacity: 0, duration: 0.5, ease: "power3.out" }, 0.2);
+
+// Step 4: Animate OUT from those positions
+tl.to(".title", { y: -40, opacity: 0, duration: 0.4, ease: "power2.in" }, 3);
+```
+
+### Container Patterns
+
+**✅ Full-Scene Container (Recommended):**
+
+```css
+.scene-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 120px 160px; /* Safe area */
+  gap: 24px;
+  box-sizing: border-box;
+}
+```
+
+**❌ Do NOT use absolute positioning for content:**
+
+```css
+/* WRONG - breaks on long text */
+.scene-content {
+  position: absolute;
+  top: 200px;
+  left: 160px;
+  width: 1920px;
+  height: 1080px;
+}
+```
+
+Reserve `position: absolute` for decorative elements only (particles, glows, background shapes).
+
+### Safe Area Rules
+
+Keep key information inside the safe area:
+
+- **Horizontal:** ~5% from left/right edges (~96px on 1920px width)
+- **Vertical:** ~5% from top/bottom edges (~54px on 1080px height)
+- **Bottom (captions/CTA):** ~10% from bottom (~108px)
+
+**What must stay safe:**
+- Critical text, headlines, body copy
+- Logo (unless intentionally edge-anchored)
+- CTA buttons and links
+- Captions and subtitles
+- Presenter faces
+- Product UI screenshots
+- Legal/price copy
+
+**What can extend beyond:**
+- Full-bleed backgrounds
+- Decorative glows and particles
+- Grain and texture overlays
+- Transition effects
+
+Mark intentional overflow: `<div class="grain" data-layout-allow-overflow>`
+
+### Text Handling
+
+**Natural wrapping:**
+
+```css
+.headline {
+  max-width: 1200px; /* Wraps at this width */
+  font-size: 96px;
+  line-height: 1.1;
+}
+```
+
+**Dynamic fitting:**
+
+```javascript
+const { title } = window.__framevideo.getVariables();
+const fontSize = window.__framevideo.fitTextFontSize(title, {
+  maxWidth: 1200,
+  fontFamily: 'Inter',
+  fontWeight: 700
+});
+document.getElementById('title').style.fontSize = fontSize + 'px';
+```
+
+**Avoid fixed-size text containers** - use elastic containers with padding instead.
+
+### Common Layout Patterns
+
+**Centered Title Card:**
+
+```html
+<div class="scene-content">
+  <h1>Main Message</h1>
+  <p class="subtitle">Supporting detail</p>
+</div>
+
+<style>
+  .scene-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+    padding: 120px 160px;
+    gap: 32px;
+    box-sizing: border-box;
+  }
+</style>
+```
+
+**Split Layout (Text + Visual):**
+
+```html
+<div class="scene-content">
+  <div class="text-side">
+    <h2>Product Feature</h2>
+    <p>Explanation</p>
+  </div>
+  <div class="visual-side">
+    <img src="assets/product.png" />
+  </div>
+</div>
+
+<style>
+  .scene-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    padding: 120px 160px;
+    box-sizing: border-box;
+  }
+</style>
+```
+
+</details>
+
+---
+
+<details>
+<summary><h2>🎬 Animation & Motion (Click to Expand)</h2></summary>
+
+### Animation Guardrails
+
+**Timing offsets** - Never start first animation at t=0:
+
+```javascript
+// ❌ Wrong
+tl.from(".title", { opacity: 0 }, 0);
+
+// ✅ Right
+tl.from(".title", { opacity: 0 }, 0.2); // 0.1-0.3s offset
+```
+
+**Vary easing curves** - Use at least 3 different eases per scene:
+
+```javascript
+tl.from("#el1", { opacity: 0, ease: "power3.out" }, 0.2);
+tl.from("#el2", { opacity: 0, ease: "expo.out" }, 0.4);
+tl.from("#el3", { opacity: 0, ease: "back.out(1.4)" }, 0.6);
+```
+
+Common eases: `power1.out`, `power2.out`, `power3.out`, `expo.out`, `back.out(1.7)`, `elastic.out(1, 0.3)`
+
+**Don't repeat entrance patterns** - Each element should have unique direction or style:
+
+```javascript
+// ❌ Wrong - everything from top
+tl.from("#title", { y: 60, opacity: 0 }, 0.2);
+tl.from("#subtitle", { y: 60, opacity: 0 }, 0.5);
+
+// ✅ Right - varied directions
+tl.from("#title", { y: 60, opacity: 0 }, 0.2);
+tl.from("#subtitle", { x: -30, opacity: 0 }, 0.5);
+tl.from("#cta", { scale: 0.8, opacity: 0 }, 0.8);
+```
+
+**Performance properties** - Prefer GPU-accelerated:
+
+- ✅ Fast: `opacity`, `x`, `y`, `scale`, `rotation`
+- ❌ Slow: `width`, `height`, `top`, `left`, `margin`, `padding`, `font-size`
+
+### Common Animation Patterns
+
+**Stagger entrances:**
+
+```javascript
+// Stagger by time
+tl.from(".item", { 
+  y: 30, 
+  opacity: 0, 
+  duration: 0.5,
+  stagger: 0.1,
+  ease: "power2.out"
+}, 0.5);
+
+// Stagger from center
+tl.from(".grid-item", {
+  scale: 0.8,
+  opacity: 0,
+  duration: 0.4,
+  stagger: { amount: 0.6, from: "center" },
+  ease: "back.out(1.4)"
+}, 1.0);
+```
+
+**Sequence vs Overlap:**
+
+```javascript
+// Sequence - one after another
+tl.from("#el1", { opacity: 0, duration: 0.5 }, 0);
+tl.from("#el2", { opacity: 0, duration: 0.5 }, ">"); // After previous ends
+
+// Overlap - start before previous ends
+tl.from("#el1", { opacity: 0, duration: 0.8 }, 0);
+tl.from("#el2", { opacity: 0, duration: 0.5 }, "<0.4"); // 0.4s after el1 starts
+```
+
+**Label-based sequencing:**
+
+```javascript
+tl.addLabel("intro", 0);
+tl.from("#title", { opacity: 0 }, "intro");
+tl.from("#subtitle", { opacity: 0 }, "intro+=0.5");
+
+tl.addLabel("content", 2.5);
+tl.from("#feature1", { x: -40, opacity: 0 }, "content");
+```
+
+### Scene Rhythm Templates
+
+Declare rhythm before implementing:
+
+- **Fast-Fast-SLOW:** Quick intro beats → hold for message (2s, 3s, 5s)
+- **Build-PEAK-Resolve:** Escalating energy → climax → settle (3s, 2s, 4s)
+- **Even Pulse:** Consistent rhythm (all beats 3-4s, good for instructional)
+
+See [references/beat-direction.md](references/beat-direction.md) for more templates.
+
+### Animation Conflicts
+
+Never animate the same property on the same element from multiple timelines:
+
+```javascript
+// ❌ Wrong - both animate opacity
+timeline1.to("#el", { opacity: 0.5 });
+timeline2.to("#el", { opacity: 1 }); // Conflict!
+
+// ✅ Right - separate properties
+timeline1.to("#el", { opacity: 0.5 });
+timeline2.to("#el", { x: 100 }); // No conflict
+```
+
+</details>
+
+---
+
+## Scene Transitions (Non-Negotiable)
+
+**Every multi-scene composition MUST follow these 4 rules:**
+
+### Rule 1: Always Use Transitions
+No jump cuts between scenes. Every scene change needs a transition.
+
+### Rule 2: Always Use Entrance Animations
+Every element in every scene animates IN via `gsap.from()`. No element may appear fully-formed.
+
+### Rule 3: Never Use Exit Animations (Except Final Scene)
+Do NOT animate elements out before a transition. The transition IS the exit. The outgoing scene's content MUST be fully visible when the transition starts.
+
+### Rule 4: Final Scene Only
+The last scene is the ONLY scene where `gsap.to(..., { opacity: 0 })` or exit animations are allowed.
+
+**Example:**
+
+```javascript
+// Scene 1 (0-7s)
+// ✅ Entrance animations only
+tl.from("#s1-title", { y: 50, opacity: 0, duration: 0.7, ease: "power3.out" }, 0.3);
+tl.from("#s1-subtitle", { y: 30, opacity: 0, duration: 0.5, ease: "power2.out" }, 0.6);
+// ❌ NO exit animations - transition handles it
+
+// Transition at 7s (see references/transitions.md)
+
+// Scene 2 (8-15s)
+// ✅ Entrance animations
+tl.from("#s2-heading", { x: -40, opacity: 0, duration: 0.6, ease: "expo.out" }, 8.0);
+
+// Final scene (15-20s)
+// ✅ OK to fade out on final scene only
+tl.from("#s3-cta", { scale: 0.9, opacity: 0, duration: 0.5 }, 15.2);
+tl.to("#s3-cta", { opacity: 0, duration: 0.5, ease: "power2.in" }, 19.5);
+```
+
+See [references/transitions.md](references/transitions.md) for transition implementation.
+
+---
+## Layout Before Animation
+
+```css
 .scene-content {
   display: flex;
   flex-direction: column;

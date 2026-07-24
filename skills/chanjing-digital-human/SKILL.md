@@ -1,6 +1,6 @@
 ---
 name: chanjing-digital-human
-description: Chanjing platform integration for FrameVideo: OAuth-aware digital-human video synthesis, public/custom digital-human and voice selection, Chanjing AI Creation image/video assets, platform BGM/SFX downloads, polling/downloading generated assets, and wiring Chanjing assets into FrameVideo compositions. Use when listing Chanjing people or voices, checking Chanjing auth in a platform workflow, submitting/polling digital-human videos, planning/submitting/downloading AI Creation image/video tasks, downloading Chanjing music or sound effects, or integrating Chanjing-generated assets into FrameVideo. For local Kokoro TTS/transcribe/remove-background use framevideo-media; for composition HTML conventions use framevideo.
+description: "Chanjing platform integration for FrameVideo: OAuth-aware digital-human video synthesis, public/custom digital-human and voice selection, Chanjing AI Creation image/video assets, platform BGM/SFX downloads, polling/downloading generated assets, and wiring Chanjing assets into FrameVideo compositions. Use when listing Chanjing people or voices, checking Chanjing auth in a platform workflow, submitting/polling digital-human videos, planning/submitting/downloading AI Creation image/video tasks, downloading Chanjing music or sound effects, or integrating Chanjing-generated assets into FrameVideo. For local Kokoro TTS/transcribe/remove-background use framevideo-media; for composition HTML conventions use framevideo."
 ---
 
 # Chanjing Platform for FrameVideo
